@@ -54,17 +54,32 @@ h1 {
     margin-bottom: 5px;
 }
 
+/* Style for buttons to ensure consistent size */
 button {
-    background-color: #4CAF50;
-    color: white;
-    padding: 10px 20px;
+    padding: 10px 20px; /* Consistent padding */
+    font-size: 16px; /* Consistent font size */
+    min-width: 120px; /* Minimum width to prevent shrinking */
+    text-align: center; /* Center the text */
     border: none;
-    border-radius: 4px;
+    border-radius: 5px;
     cursor: pointer;
+    background-color: #28a745; /* Green color to match the existing button */
+    color: white;
+    transition: background-color 0.3s;
 }
 
 button:hover {
-    background-color: #45a049;
+    background-color: #218838; /* Slightly darker green on hover */
+}
+
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+/* Ensure the Save button matches the Upload button */
+#saveButton {
+    margin-top: 10px; /* Add some spacing above the button */
 }
 
 /* Table Styling */
@@ -84,7 +99,7 @@ th, td {
     border: 1px solid #ddd;
     padding: 8px;
     text-align: left;
-    white-space: nowrap; /* Prevent wrapping */
+    white-space: nowrap; /* Prevent wrapping for most columns */
     overflow: hidden;
     text-overflow: ellipsis;
 }
@@ -122,10 +137,10 @@ th:nth-child(8), td:nth-child(8) { /* Designation */
 th:nth-child(9), td:nth-child(9) { /* Skills */
     width: 300px;
     white-space: normal; /* Allow wrapping for Skills */
-    max-height: 100px;
-    overflow-y: auto;
-    line-height: 1.4;
-    display: block;
+    max-height: 100px; /* Limit the height of the Skills cell */
+    overflow-y: auto; /* Enable vertical scrolling within the cell */
+    line-height: 1.4; /* Improve readability */
+    display: block; /* Ensure scrolling works properly */
 }
 th:nth-child(10), td:nth-child(10) { /* CTC info */
     width: 100px;
@@ -140,7 +155,7 @@ th:nth-child(13), td:nth-child(13) { /* Loyalty % */
     width: 80px;
 }
 th:nth-child(14), td:nth-child(14) { /* File Name */
-    width: 150px;
+    width: 200px; /* Increase width to accommodate long URLs */
 }
 
 #saveButton {
