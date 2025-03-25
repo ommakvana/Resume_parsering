@@ -29,6 +29,8 @@ document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             return;
         }
 
+        // Store file_references globally for use during save
+        window.fileReferences = data.file_references || {};
         displayPreview(data.resumes);
     } catch (error) {
         console.error('Error uploading files:', error);
@@ -49,31 +51,21 @@ document.getElementById('resumeInput').addEventListener('change', (e) => {
         return;
     }
 
-    // Convert FileList to Array and extract names
     const fileArray = Array.from(files);
-    
-    // Sort files: first by number (if present), then alphabetically
     fileArray.sort((a, b) => {
         const nameA = a.name;
         const nameB = b.name;
-
-        // Extract numbers from file names (e.g., "2.3 YR EXP" or "Resume (1)")
         const numA = nameA.match(/\d+(\.\d+)?/);
         const numB = nameB.match(/\d+(\.\d+)?/);
-
         if (numA && numB) {
-            // If both names have numbers, sort numerically
             return parseFloat(numA[0]) - parseFloat(numB[0]);
         } else if (numA || numB) {
-            // If only one has a number, the one with a number comes first
             return numA ? -1 : 1;
         } else {
-            // If no numbers, sort alphabetically
             return nameA.localeCompare(nameB);
         }
     });
 
-    // Create a bulleted list of file names
     const ul = document.createElement('ul');
     fileArray.forEach(file => {
         const li = document.createElement('li');
@@ -94,25 +86,28 @@ function displayPreview(resumes) {
         const fields = [
             'Date', 'Name', 'Email Id', 'Contact No', 'Current Location', 'Category',
             'Total Experience', 'Designation', 'Skills', 'CTC info',
-            'No of companies worked with till today', 'Last company worked with', 'Loyalty %', 'File Name'
+            'No of companies worked with till today', 'Last company worked with', 'Loyalty %'
         ];
 
-        fields.forEach(field => {
+        if (resume.error) {
             const cell = document.createElement('td');
-            if (resume.error && field === 'File Name') {
-                cell.textContent = `${resume['File Name']} (Error: ${resume.error})`;
-                cell.style.color = 'red';
-            } else {
-                cell.textContent = resume[field] || '';
-            }
+            cell.colSpan = fields.length;
+            cell.textContent = `Error: ${resume.error} (${resume.original_filename})`;
+            cell.style.color = 'red';
             row.appendChild(cell);
-        });
+        } else {
+            fields.forEach(field => {
+                const cell = document.createElement('td');
+                cell.textContent = resume[field] || '';
+                row.appendChild(cell);
+            });
+        }
 
         tableBody.appendChild(row);
     });
 
     document.getElementById('previewSection').style.display = 'block';
-    window.resumesToSave = resumes; // Store resumes globally for saving
+    window.resumesToSave = resumes;
 }
 
 document.getElementById('saveButton').addEventListener('click', async () => {
@@ -129,20 +124,24 @@ document.getElementById('saveButton').addEventListener('click', async () => {
         const response = await fetch('/save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ resumes: window.resumesToSave })
+            body: JSON.stringify({ 
+                resumes: window.resumesToSave,
+                file_references: window.fileReferences // Send file references to the backend
+            })
         });
         const result = await response.json();
 
         alert(result.message);
         document.getElementById('previewSection').style.display = 'none';
         window.resumesToSave = [];
-        document.getElementById('resumeInput').value = ''; // Reset file input
+        window.fileReferences = {}; // Clear file references after saving
+        document.getElementById('resumeInput').value = '';
         document.getElementById('fileNames').textContent = 'No file chosen';
     } catch (error) {
         console.error('Error saving to sheet:', error);
         alert('An error occurred while saving to the sheet.');
     } finally {
         saveButton.disabled = false;
-        saveButton.textContent = 'Save to Sheet';
+        saveButton.textContent = 'Save';
     }
 });
