@@ -1,0 +1,30 @@
+# PDF handling
+PyMuPDF  # For fitz (PDF text extraction)
+pdf2image  # For converting PDF to images for OCR
+
+# OCR
+easyocr  # For OCR fallback
+
+# Data processing
+pandas  # For handling data (though not heavily used, kept from original)
+numpy  # For array operations with EasyOCR
+
+# Groq API client
+groq  # Official Groq SDK
+
+# DOCX handling
+python-docx  # For DOCX file extraction
+
+# Google API clients
+gspread  # For Google Sheets interaction
+oauth2client  # For Google authentication
+google-auth-oauthlib  # For Google OAuth
+google-auth-httplib2  # For Google API requests
+google-api-python-client  # For Google Drive API
+google-auth
+
+pytz
+python-dateutil
+
+flask-socketio 
+eventlet

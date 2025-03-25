@@ -1,0 +1,163 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f4;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+.upload-section, .preview-section {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+/* Custom File Input Styling */
+.custom-file-upload {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+#resumeInput {
+    display: none;
+}
+
+#fileNames {
+    color: #666;
+    margin: 10px 0;
+    display: block;
+}
+
+#fileNames ul {
+    list-style-type: disc;
+    padding-left: 20px;
+    margin: 0;
+}
+
+#fileNames li {
+    margin-bottom: 5px;
+}
+
+button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+/* Table Styling */
+.table-wrapper {
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    min-width: 1200px; /* Ensure table is wide enough for all columns */
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+    white-space: nowrap; /* Prevent wrapping */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+/* Specific column widths */
+th:nth-child(1), td:nth-child(1) { /* Date */
+    width: 100px;
+}
+th:nth-child(2), td:nth-child(2) { /* Name */
+    width: 150px;
+}
+th:nth-child(3), td:nth-child(3) { /* Email Id */
+    width: 200px;
+}
+th:nth-child(4), td:nth-child(4) { /* Contact No */
+    width: 120px;
+}
+th:nth-child(5), td:nth-child(5) { /* Current Location */
+    width: 120px;
+}
+th:nth-child(6), td:nth-child(6) { /* Category */
+    width: 100px;
+}
+th:nth-child(7), td:nth-child(7) { /* Total Experience */
+    width: 100px;
+}
+th:nth-child(8), td:nth-child(8) { /* Designation */
+    width: 150px;
+}
+th:nth-child(9), td:nth-child(9) { /* Skills */
+    width: 300px;
+    white-space: normal; /* Allow wrapping for Skills */
+    max-height: 100px;
+    overflow-y: auto;
+    line-height: 1.4;
+    display: block;
+}
+th:nth-child(10), td:nth-child(10) { /* CTC info */
+    width: 100px;
+}
+th:nth-child(11), td:nth-child(11) { /* No of companies */
+    width: 100px;
+}
+th:nth-child(12), td:nth-child(12) { /* Last company */
+    width: 150px;
+}
+th:nth-child(13), td:nth-child(13) { /* Loyalty % */
+    width: 80px;
+}
+th:nth-child(14), td:nth-child(14) { /* File Name */
+    width: 150px;
+}
+
+#saveButton {
+    margin-top: 20px;
+    display: block;
+    width: 200px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    .upload-section, .preview-section {
+        padding: 10px;
+    }
+    button {
+        width: 100%;
+    }
+}
