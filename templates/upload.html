@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Submit Resume</title>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif; /* Tesla uses modern sans-serif fonts */
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); /* Dark gradient like Tesla's aesthetic */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Main Container */
+        .container {
+            background: rgba(255, 255, 255, 0.05); /* Glassmorphism effect */
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated background effect */
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 10%, transparent 70%);
+            animation: pulse 10s infinite ease-in-out;
+            pointer-events: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.2); opacity: 0.5; }
+        }
+
+        /* Heading */
+        h1 {
+            color: #fff;
+            font-size: 2.5em;
+            text-align: center;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Form Styles */
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        input[type="file"] {
+            display: none; /* Hide default file input */
+        }
+
+        .custom-file-upload {
+            background: #e82127; /* Tesla red */
+            color: #fff;
+            padding: 15px 25px;
+            border-radius: 50px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .custom-file-upload:hover {
+            background: #c71b22;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(232, 33, 39, 0.4);
+        }
+
+        .custom-file-upload::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        .custom-file-upload:hover::after {
+            width: 200%;
+            height: 200%;
+        }
+
+        .file-name {
+            color: #ccc;
+            font-size: 0.9em;
+            text-align: center;
+            margin-top: -10px;
+        }
+
+        button {
+            background: linear-gradient(45deg, #333, #555);
+            border: none;
+            padding: 15px;
+            border-radius: 50px;
+            color: #fff;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover {
+            background: linear-gradient(45deg, #444, #666);
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.7);
+        }
+
+        button:disabled {
+            background: #444;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .spinner {
+            width: 80px;
+            height: 80px;
+            border: 10px solid rgba(255, 255, 255, 0.1);
+            border-top: 10px solid #e82127; /* Tesla red */
+            border-radius: 50%;
+            animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            position: relative;
+        }
+
+        .spinner::before {
+            content: 'Processing...';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .container {
+                margin: 20px;
+                padding: 30px;
+            }
+            h1 { font-size: 2em; }
+            button, .custom-file-upload { font-size: 1em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Submit Resume</h1>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <label for="resumeInput" class="custom-file-upload">Choose Resume</label>
+            <input type="file" name="resume" id="resumeInput" accept=".pdf,.docx,.doc,.rtf,.txt,.png,.jpg" required>
+            <span class="file-name" id="fileName">No file chosen</span>
+            <button type="submit" id="uploadButton">Upload Resume</button>
+        </form>
+    </div>
+
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('resumeInput');
+        const fileNameSpan = document.getElementById('fileName');
+        
+        fileInput.addEventListener('change', () => {
+            fileNameSpan.textContent = fileInput.files[0]?.name || 'No file chosen';
+        });
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const uploadButton = document.getElementById('uploadButton');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
+            uploadButton.disabled = true;
+            uploadButton.textContent = 'Uploading...';
+            loadingOverlay.style.display = 'flex';
+
+            try {
+                const response = await fetch('/submit/{{ token }}', {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error);
+                }
+                document.body.innerHTML = await response.text();
+            } catch (error) {
+                alert('Error uploading resume: ' + error.message);
+                uploadButton.disabled = false;
+                uploadButton.textContent = 'Upload Resume';
+                loadingOverlay.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
