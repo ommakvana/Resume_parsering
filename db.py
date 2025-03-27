@@ -21,7 +21,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB max file size
 
 # Set up SQLite database
-engine = create_engine('sqlite:////home/logbinary/Downloads/resumes.db', echo=True)
+engine = create_engine('sqlite:////home/ubuntu/Resume_parsering/resumes.db', echo=True)
 Base = declarative_base()
 
 class Resume(Base):
