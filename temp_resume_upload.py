@@ -116,7 +116,7 @@ def upload_resume(token):
 
         # Mark this IP as having submitted for this token
         temp_links[token]['submitted_ips'].add(client_ip)
-        print(f"IP {client_ip} marked as submitted for token {token}")
+        print(f"IP {client_ip} marked as submitted   for token {token}")
 
         # Clean up
         os.remove(file_path)
