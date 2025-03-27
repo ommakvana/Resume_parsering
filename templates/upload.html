@@ -227,23 +227,43 @@
             const formData = new FormData(e.target);
             const uploadButton = document.getElementById('uploadButton');
             const loadingOverlay = document.getElementById('loadingOverlay');
+            const token = window.location.pathname.split('/').pop(); // Extract token from URL
 
             uploadButton.disabled = true;
             uploadButton.textContent = 'Uploading...';
             loadingOverlay.style.display = 'flex';
 
             try {
-                const response = await fetch('/submit/{{ token }}', {
+                const response = await fetch(`/career/${token}`, {
                     method: 'POST',
                     body: formData
                 });
-                if (!response.ok) {
+
+                const contentType = response.headers.get('content-type');
+                
+                if (contentType && contentType.includes('application/json')) {
                     const data = await response.json();
-                    throw new Error(data.error);
+                    
+                    if (response.ok) {
+                        // Successful upload
+                        alert('Resume uploaded successfully!');
+                        window.location.href = '/success'; // Redirect to a success page
+                    } else {
+                        // Error response from server
+                        throw new Error(data.error || 'Upload failed');
+                    }
+                } else {
+                    // Fallback for non-JSON responses
+                    const text = await response.text();
+                    document.body.innerHTML = text;
                 }
-                document.body.innerHTML = await response.text();
             } catch (error) {
+                console.error('Upload error:', error);
                 alert('Error uploading resume: ' + error.message);
+                uploadButton.disabled = false;
+                uploadButton.textContent = 'Upload Resume';
+                loadingOverlay.style.display = 'none';
+            } finally {
                 uploadButton.disabled = false;
                 uploadButton.textContent = 'Upload Resume';
                 loadingOverlay.style.display = 'none';
