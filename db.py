@@ -2,11 +2,11 @@ from flask import Flask, render_template, request, jsonify, url_for
 import os
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
-import uuid
+import threading
+from itsdangerous import URLSafeTimedSerializer, BadSignature  # For encrypted tokens
 from sqlalchemy import create_engine, Column, String, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-import threading  # Import threading module
 # Import file processing and Google functions
 from data_ingestion.file_processor import process_single_resume, extract_text_from_pdf, extract_text_from_docx, parse_resume
 from data_ingestion.config import SAVE_DIR, SPREADSHEET_ID
@@ -15,13 +15,16 @@ from Google_work.google_drive import upload_to_google_drive
 
 app = Flask(__name__)
 
+# Secret key for encryption (replace with a secure key in production)
+app.config['SECRET_KEY'] = 'your-secure-secret-key-here'  # Change this to a strong secret
+
 UPLOAD_FOLDER = 'temp_uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'docx', 'doc', 'rtf', 'txt', 'png', 'jpg'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB max file size
 
 # Set up SQLite database
-engine = create_engine('sqlite:////home/ubuntu/Resume_parsering/resumes.db', echo=True)
+engine = create_engine('sqlite:///resumes.db', echo=True)
 Base = declarative_base()
 
 class Resume(Base):
@@ -30,9 +33,12 @@ class Resume(Base):
     ip_address = Column(String)
     filename = Column(String)
     token = Column(String)
-
+    
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
+
+# URL-safe serializer for encrypting tokens
+serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
@@ -40,8 +46,19 @@ if not os.path.exists(UPLOAD_FOLDER):
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def generate_temp_token():
-    return str(uuid.uuid4())
+def generate_encrypted_token():
+    # Generate a simple token payload (e.g., current timestamp or random data)
+    data = {'created_at': datetime.now().isoformat()}
+    # Encrypt the data into a token
+    return serializer.dumps(data)
+
+def validate_token(token):
+    try:
+        # Decrypt the token (no expiration enforced unless specified)
+        serializer.loads(token)  # We just check if it’s valid
+        return True
+    except BadSignature:
+        return False
 
 def has_ip_submitted(token, ip_address):
     session = Session()
@@ -50,6 +67,7 @@ def has_ip_submitted(token, ip_address):
     return result is not None
 
 sheet_lock = threading.Lock()
+
 # Background processing function
 def process_resume_in_background(file_path, filename, token, client_ip):
     try:
@@ -69,7 +87,6 @@ def process_resume_in_background(file_path, filename, token, client_ip):
         drive_link = upload_to_google_drive(filename, file_content, gc)
         parsed_data['File Name'] = drive_link if drive_link else filename
 
-        # Serialize access to Google Sheets
         with sheet_lock:
             write_to_google_sheet(parsed_data, SPREADSHEET_ID)
 
@@ -85,21 +102,24 @@ def process_resume_in_background(file_path, filename, token, client_ip):
         if os.path.exists(file_path):
             os.remove(file_path)
 
-@app.route('/')
+@app.route('/career')
 def index():
     return render_template('generate_link.html')
 
 @app.route('/generate_link', methods=['POST'])
 def generate_link():
-    token = generate_temp_token()
-    link = f"https://jobs.logbinary.com/submit/{token}"
+    token = generate_encrypted_token()
+    link = f"http://jobs.logbinary.com/career/{token}"
     return jsonify({
         'link': link,
-        'expires_at': (datetime.now() + timedelta(hours=1)).isoformat()
+        'expires_at': (datetime.now() + timedelta(hours=1)).isoformat()  # Optional, not enforced
     })
 
-@app.route('/submit/<token>', methods=['GET', 'POST'])
+@app.route('/career/<token>', methods=['GET', 'POST'])
 def upload_resume(token):
+    if not validate_token(token):
+        return render_template('invalid_link.html'), 403
+
     client_ip = request.remote_addr
     print(f"Request from IP: {client_ip} for token: {token}")
 
@@ -107,7 +127,7 @@ def upload_resume(token):
         return render_template('already_submitted.html'), 403
 
     if request.method == 'GET':
-        return render_template('upload.html', token=token)
+        return render_template('upload.html', token=token)  # Same page for all valid tokens
 
     if 'resume' not in request.files:
         return jsonify({'error': 'No file uploaded'}), 400
@@ -124,6 +144,6 @@ def upload_resume(token):
     thread.start()
 
     return render_template('success.html')
-    
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=7700, debug=True)
+    pass
