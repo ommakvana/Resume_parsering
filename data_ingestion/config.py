@@ -5,15 +5,19 @@ import os
 # Email settings
 LAST_CHECK_FILE = "last_email_check.pickle"
 
-USE_GMAIL = True
+USE_GMAIL = False
 if USE_GMAIL:
     EMAIL = "om.logbinary@gmail.com"
     PASSWORD = "bght egln bgok mrsu"  # Google App Password
     IMAP_SERVER = "imap.gmail.com"
+# else:
+#     EMAIL = "hr@logbinary.com"
+#     PASSWORD = "HR@logbinary"  # GoDaddy password
+#     IMAP_SERVER = "imap.secureserver.net"
 else:
-    EMAIL = "hr@logbinary.com"
-    PASSWORD = "HR@logbinary"  # GoDaddy password
-    IMAP_SERVER = "imap.secureserver.net"
+    EMAIL="om.makvana@logbinary.com"
+    PASSWORD="Om@LogBinary" # GoDaddy password
+    IMAP_SERVER="imap.secureserver.net"
 
 SPREADSHEET_ID = "1moOssMtT96cifsWtDLpXRae_7v0yMtjwDBRCgJtyzPM"
 DRIVE_FOLDER_ID = "1U1xy6XZ3GncGBaYNiKmWTn-aDc9pxBIx"
