@@ -39,6 +39,7 @@ class Resume(Base):
     ip_address = Column(String)
     filename = Column(String)
     token = Column(String)
+    status = Column(String, default="pending")
 
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
@@ -82,10 +83,18 @@ def has_ip_submitted(token, ip_address):
     session = Session()
     result = session.query(Resume).filter_by(token=token, ip_address=ip_address).first()
     session.close()
-    return result is not None
+    return result is not None  # Returns True if any record exists (pending or completed)
 
 def process_resume_in_background(file_path, filename, token, client_ip):
     try:
+        # Record the submission as "pending" immediately
+        session = Session()
+        new_resume = Resume(ip_address=client_ip, filename=filename, token=token, status="pending")
+        session.add(new_resume)
+        session.commit()
+        session.close()
+
+        # Process the resume
         if filename.lower().endswith('.pdf'):
             resume_text = extract_text_from_pdf(file_path)
         else:
@@ -105,10 +114,12 @@ def process_resume_in_background(file_path, filename, token, client_ip):
         with sheet_lock:
             write_to_google_sheet(parsed_data, SPREADSHEET_ID)
 
+        # Update status to "completed"
         session = Session()
-        new_resume = Resume(ip_address=client_ip, filename=filename, token=token)
-        session.add(new_resume)
-        session.commit()
+        resume = session.query(Resume).filter_by(token=token, ip_address=client_ip, filename=filename).first()
+        if resume:
+            resume.status = "completed"
+            session.commit()
         session.close()
     except Exception as e:
         print(f"Error processing resume in background: {str(e)}")
