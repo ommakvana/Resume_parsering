@@ -237,6 +237,64 @@
                 font-size: 1.5em; 
             }
         }
+        /* Footer Styles */
+        .footer {
+            background-color: #2d2d2d;
+            color: #ffffff;
+            padding: 40px 0;
+            text-align: center;
+            margin-top: 40px; /* Add some space between content and footer */
+        }
+        .footer-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .footer-section {
+            flex: 1;
+            min-width: 250px;
+            margin-bottom: 20px;
+        }
+        .footer-section h4 {
+            margin: 10px 0;
+            color: #fff;
+        }
+        .footer-section p {
+            font-size: 14px;
+            color: #dcdcdc;
+        }
+        .footer-section i {
+            font-size: 20px;
+            color: #f2f2f2;
+            margin-right: 10px;
+        }
+        .footer-bottom {
+            margin-top: 20px;
+            border-top: 1px solid #444;
+            padding-top: 15px;
+            font-size: 14px;
+            color: #bbb;
+            text-align: center;
+        }
+        .social-icons {
+            margin-top: 10px;
+        }
+        .social-icons a {
+            color: #ffffff;
+            font-size: 18px;
+            margin: 0 10px;
+            transition: 0.3s;
+        }
+        .social-icons a:hover {
+            color: #f2a900;
+        }
+        @media (max-width: 768px) {
+            .footer-container {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
@@ -303,27 +361,39 @@
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
     </div>
-    <footer>
-        <div class="footer-container" style="max-width: 1200px; margin: 0 auto; padding: 20px; background: #fff; text-align: center; color: #667085;">
+    <footer class="footer">
+        <div class="footer-container">
             <div class="footer-section">
-                <h3 style="color: #ff6b00; font-size: 1.2em; margin-bottom: 10px;">Log Binary</h3>
-                <p>End-to-end IT solutions provider with 15 years of experience.</p>
-            </div>
-            <div class="footer-section" style="margin: 20px 0;">
-                <p>Contact Us: <a href="mailto:info@logbinary.com" style="color: #ff6b00; text-decoration: none;">info@logbinary.com</a> | +91-123-456-7890</p>
-                <p>Ahmedabad, India</p>
+                <i class="fas fa-map-marker-alt"></i>
+                <h4>Headquarter 🇮🇳</h4>
+                <p>A-204, Empire Business Hub, Science City Road, Sola, Ahmedabad - 380060, India</p>
+                <p><i class="fas fa-phone"></i> +91-931 678 9418</p>
             </div>
             <div class="footer-section">
-                <a href="https://www.linkedin.com/company/logbinary" target="_blank" style="color: #ff6b00; margin: 0 10px; text-decoration: none;">LinkedIn</a>
-                <a href="https://twitter.com/logbinary" target="_blank" style="color: #ff6b00; margin: 0 10px; text-decoration: none;">Twitter</a>
-                <a href="https://www.facebook.com/logbinary" target="_blank" style="color: #ff6b00; margin: 0 10px; text-decoration: none;">Facebook</a>
+                <i class="fas fa-map-marker-alt"></i>
+                <h4>Office 🇺🇸</h4>
+                <p>319 Washington St #2, Boston, MA 02135, United States</p>
+                <p><i class="fas fa-phone"></i> +1-617 359 3207, +1-617 837 6892</p>
             </div>
-            <div class="footer-section" style="margin-top: 20px;">
-                <p>&copy; 2025 Log Binary. All rights reserved.</p>
+            <div class="footer-section">
+                <i class="fas fa-map-marker-alt"></i>
+                <h4>Office 🇨🇦</h4>
+                <p>152-3030 Breakwater Ct, Mississauga, ON L5B 4N5, Canada</p>
+                <p><i class="fas fa-phone"></i> +1-647 478 1360</p>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>Copyright © All Rights Reserved</p>
+            <div class="social-icons">
+                <a href="#"><i class="fab fa-facebook"></i></a>
+                <a href="#"><i class="fab fa-linkedin"></i></a>
             </div>
         </div>
     </footer>
-    
+
+    <!-- Existing script tags and content -->
+</body>
     <script>
         // (All the original JavaScript remains the same as in the previous document)
         // Access key protection, event listeners, and all other functions remain unchanged
@@ -602,5 +672,6 @@
             }
         });
     </script>
+
 </body>
 </html>
