@@ -262,6 +262,7 @@ def upload_resume(token):
     thread = threading.Thread(target=process_resume_in_background, args=(file_path, filename, token, client_ip))
     thread.start()
 
+    time.sleep(2)
     return render_template('success.html')
 
 if __name__ == '__main__':
