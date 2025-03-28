@@ -82,12 +82,20 @@ def validate_token(token):
         return False
 
 def get_client_ip():
-    if request.headers.getlist("X-Forwarded-For"):
-        real_ip = request.headers.getlist("X-Forwarded-For")[0].strip()
-        print(f"🔍 Detected IP from X-Forwarded-For: {real_ip}")
-        return real_ip
-    print(f"🔍 Detected IP from remote_addr: {request.remote_addr}")
-    return request.remote_addr
+    # Get the X-Forwarded-For header as a single string
+    forwarded_for = request.headers.get("X-Forwarded-For")
+    
+    if forwarded_for:
+        # Split the header into a list of IPs and take the first one (client IP)
+        client_ip = forwarded_for.split(',')[0].strip()
+        print(f"🔍 Detected IP from X-Forwarded-For: {client_ip}")
+        print(f"Full X-Forwarded-For header: {forwarded_for}")
+        return client_ip
+    
+    # Fallback to remote_addr if no X-Forwarded-For header is present
+    client_ip = request.remote_addr
+    print(f"🔍 Detected IP from remote_addr: {client_ip}")
+    return client_ip
 
 def has_ip_submitted(token, ip_address):
     session = Session()
@@ -255,8 +263,7 @@ def upload_resume(token):
 
     # client_ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
     client_ip = get_client_ip()
-    print(f"X-Forwarded-For: {request.headers.get('X-Forwarded-For')}")
-    print(f"Remote Addr: {request.remote_addr}")
+    print(f"Headers: {dict(request.headers)}")
     print(f"Detected client_ip: {client_ip}")
 
     # Check if the IP has already submitted a resume (either pending or processed)
