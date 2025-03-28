@@ -304,40 +304,40 @@
             const pageTitle = document.getElementById('pageTitle');
             const linkSection = document.getElementById('linkSection');
             const uploadSection = document.getElementById('uploadSection');
-
+    
             function promptForAccessKey() {
                 return prompt('Access Required\nEnter Access Key:');
             }
-
+    
             function hasLoginExpired(loginTimestamp) {
                 return (Date.now() - loginTimestamp) > LOGIN_DURATION;
             }
-
+    
             function clearLoginData() {
                 localStorage.removeItem('pageAccess');
                 localStorage.removeItem('loginTimestamp');
             }
-
+    
             function showPageContent() {
                 document.body.style.display = 'block'; // Show the page
             }
-
+    
             function checkPageAccess() {
                 const isValidated = localStorage.getItem('pageAccess') === 'true';
                 const loginTimestamp = parseInt(localStorage.getItem('loginTimestamp'), 10);
-
+    
                 // If already validated and not expired, show content
                 if (isValidated && loginTimestamp && !hasLoginExpired(loginTimestamp)) {
                     showPageContent();
                     return;
                 }
-
+    
                 // Clear any old data
                 clearLoginData();
-
+    
                 let attempts = 0;
                 const maxAttempts = 10;
-
+    
                 while (attempts < maxAttempts) {
                     const userInput = promptForAccessKey();
                     if (userInput === null) {
@@ -354,17 +354,17 @@
                         attempts++;
                     }
                 }
-
+    
                 if (attempts >= maxAttempts) {
                     alert('Too many incorrect attempts. Redirecting...');
                     window.location.href = '/';
                 }
             }
-
+    
             // Initially hide the page until access is granted
             document.body.style.display = 'none';
             document.addEventListener('DOMContentLoaded', checkPageAccess);
-
+    
             // Tab switching logic with dynamic title
             document.getElementById('linkTab').addEventListener('click', function() {
                 linkSection.classList.add('active');
@@ -374,7 +374,7 @@
                 document.getElementById('previewSection').style.display = 'none';
                 pageTitle.textContent = 'Generate Link'; // Update title
             });
-
+    
             document.getElementById('uploadTab').addEventListener('click', function() {
                 uploadSection.classList.add('active');
                 linkSection.classList.remove('active');
@@ -383,17 +383,17 @@
                 pageTitle.textContent = 'Upload Resume'; // Update title
             });
         })();
-
+    
         // Generate link logic
         async function generateLink() {
             const generateButton = document.getElementById('generateButton');
             const loadingOverlay = document.getElementById('loadingOverlay');
             const linkContainer = document.getElementById('linkContainer');
-
+    
             generateButton.disabled = true;
             generateButton.textContent = 'Generating...';
             loadingOverlay.style.display = 'flex';
-
+    
             try {
                 const response = await fetch('/generate_link', { method: 'POST' });
                 const data = await response.json();
@@ -411,95 +411,162 @@
                 loadingOverlay.style.display = 'none';
             }
         }
-
+    
         // Upload and preview logic
-        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const formData = new FormData(this);
+            const formData = new FormData(e.target);
+            const files = document.getElementById('resumeInput').files;
+    
+            if (files.length > 10) {
+                alert('Maximum 10 resumes allowed!');
+                return;
+            }
+    
+            if (files.length === 0) {
+                alert('Please select at least one file!');
+                return;
+            }
+    
+            const uploadButton = e.target.querySelector('button');
             const loadingOverlay = document.getElementById('loadingOverlay');
-            const previewSection = document.getElementById('previewSection');
-            const resumeTableBody = document.getElementById('resumeTableBody');
-
+            
+            uploadButton.disabled = true;
+            uploadButton.textContent = 'Uploading...';
             loadingOverlay.style.display = 'flex';
+    
             try {
                 const response = await fetch('/upload', {
                     method: 'POST',
                     body: formData
                 });
                 const data = await response.json();
+    
                 if (data.error) {
                     alert(data.error);
                     return;
                 }
-
-                resumeTableBody.innerHTML = '';
-                data.resumes.forEach(resume => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${resume.Date || ''}</td>
-                        <td>${resume.Name || ''}</td>
-                        <td>${resume['Email Id'] || ''}</td>
-                        <td>${resume['Contact No'] || ''}</td>
-                        <td>${resume['Current Location'] || ''}</td>
-                        <td>${resume.Category || ''}</td>
-                        <td>${resume['Total Experience'] || ''}</td>
-                        <td>${resume.Designation || ''}</td>
-                        <td>${resume.Skills || ''}</td>
-                        <td>${resume['CTC info'] || ''}</td>
-                        <td>${resume['No of companies'] || ''}</td>
-                        <td>${resume['Last company'] || ''}</td>
-                        <td>${resume['Loyalty %'] || ''}</td>
-                    `;
-                    resumeTableBody.appendChild(row);
-                });
-                previewSection.style.display = 'block';
+    
+                // Store file_references globally for use during save
+                window.fileReferences = data.file_references || {};
+                displayPreview(data.resumes);
             } catch (error) {
                 console.error('Error uploading files:', error);
-                alert('Failed to upload resumes.');
+                alert('An error occurred while uploading files.');
             } finally {
+                uploadButton.disabled = false;
+                uploadButton.textContent = 'Upload';
                 loadingOverlay.style.display = 'none';
             }
         });
-
-        document.getElementById('resumeInput').addEventListener('change', function() {
-            const fileNames = Array.from(this.files).map(file => file.name).join(', ');
-            document.getElementById('fileNames').textContent = fileNames || 'No file chosen';
+    
+        // File input change event for displaying and sorting file names
+        document.getElementById('resumeInput').addEventListener('change', (e) => {
+            const files = e.target.files;
+            const fileNamesSpan = document.getElementById('fileNames');
+            
+            if (files.length === 0) {
+                fileNamesSpan.textContent = 'No file chosen';
+                return;
+            }
+    
+            const fileArray = Array.from(files);
+            fileArray.sort((a, b) => {
+                const nameA = a.name;
+                const nameB = b.name;
+                const numA = nameA.match(/\d+(\.\d+)?/);
+                const numB = nameB.match(/\d+(\.\d+)?/);
+                if (numA && numB) {
+                    return parseFloat(numA[0]) - parseFloat(numB[0]);
+                } else if (numA || numB) {
+                    return numA ? -1 : 1;
+                } else {
+                    return nameA.localeCompare(nameB);
+                }
+            });
+    
+            const ul = document.createElement('ul');
+            fileArray.forEach(file => {
+                const li = document.createElement('li');
+                li.textContent = file.name;
+                ul.appendChild(li);
+            });
+    
+            fileNamesSpan.innerHTML = '';
+            fileNamesSpan.appendChild(ul);
         });
-
-        document.getElementById('saveButton').addEventListener('click', async function() {
+    
+        // Function to display preview of uploaded resumes
+        function displayPreview(resumes) {
+            const tableBody = document.getElementById('resumeTableBody');
+            tableBody.innerHTML = '';
+            
+            resumes.forEach(resume => {
+                const row = document.createElement('tr');
+                const fields = [
+                    'Date', 'Name', 'Email Id', 'Contact No', 'Current Location', 'Category',
+                    'Total Experience', 'Designation', 'Skills', 'CTC info',
+                    'No of companies', 'Last company', 'Loyalty %'
+                ];
+    
+                if (resume.error) {
+                    const cell = document.createElement('td');
+                    cell.colSpan = fields.length;
+                    cell.textContent = `Error: ${resume.error} (${resume.original_filename})`;
+                    cell.style.color = 'red';
+                    row.appendChild(cell);
+                } else {
+                    fields.forEach(field => {
+                        const cell = document.createElement('td');
+                        cell.textContent = resume[field] || '';
+                        row.appendChild(cell);
+                    });
+                }
+    
+                tableBody.appendChild(row);
+            });
+    
+            document.getElementById('previewSection').style.display = 'block';
+            window.resumesToSave = resumes;
+        }
+    
+        // Save button event listener
+        document.getElementById('saveButton').addEventListener('click', async () => {
+            if (!window.resumesToSave || window.resumesToSave.length === 0) {
+                alert('No resumes to save!');
+                return;
+            }
+    
+            const saveButton = document.getElementById('saveButton');
             const loadingOverlay = document.getElementById('loadingOverlay');
+            
+            saveButton.disabled = true;
+            saveButton.textContent = 'Saving...';
             loadingOverlay.style.display = 'flex';
+    
             try {
                 const response = await fetch('/save', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        resumes: Array.from(document.querySelectorAll('#resumeTableBody tr')).map(row => {
-                            const cells = row.querySelectorAll('td');
-                            return {
-                                Date: cells[0].textContent,
-                                Name: cells[1].textContent,
-                                'Email Id': cells[2].textContent,
-                                'Contact No': cells[3].textContent,
-                                'Current Location': cells[4].textContent,
-                                Category: cells[5].textContent,
-                                'Total Experience': cells[6].textContent,
-                                Designation: cells[7].textContent,
-                                Skills: cells[8].textContent,
-                                'CTC info': cells[9].textContent,
-                                'No of companies': cells[10].textContent,
-                                'Last company': cells[11].textContent,
-                                'Loyalty %': cells[12].textContent
-                            };
-                        })
+                    body: JSON.stringify({ 
+                        resumes: window.resumesToSave,
+                        file_references: window.fileReferences // Send file references to the backend
                     })
                 });
-                const data = await response.json();
-                alert(data.message);
+                const result = await response.json();
+    
+                alert(result.message);
+                document.getElementById('previewSection').style.display = 'none';
+                window.resumesToSave = [];
+                window.fileReferences = {}; // Clear file references after saving
+                document.getElementById('resumeInput').value = '';
+                document.getElementById('fileNames').textContent = 'No file chosen';
             } catch (error) {
-                console.error('Error saving data:', error);
-                alert('Failed to save resumes.');
+                console.error('Error saving to sheet:', error);
+                alert('An error occurred while saving to the sheet.');
             } finally {
+                saveButton.disabled = false;
+                saveButton.textContent = 'Save';
                 loadingOverlay.style.display = 'none';
             }
         });
