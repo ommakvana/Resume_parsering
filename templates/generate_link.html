@@ -251,7 +251,8 @@
         // Career Page Key Validation
         (function() {
             // Secure key (replace with your actual secure key)
-            const CORRECT_ACCESS_KEY = 'your_secure_key_here';
+            const CORRECT_ACCESS_KEY = '7876';
+            const LOGIN_DURATION = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
 
             // Function to prompt for access key using browser popup
             function promptForAccessKey() {
@@ -266,13 +267,31 @@
                 document.querySelector('footer').style.display = 'block';
             }
 
-            // Check if already validated in this session
+            // Function to check if the login has expired
+            function hasLoginExpired(loginTimestamp) {
+                const currentTime = Date.now();
+                return (currentTime - loginTimestamp) > LOGIN_DURATION;
+            }
+
+            // Function to clear login data from localStorage
+            function clearLoginData() {
+                localStorage.removeItem('careerPageAccess');
+                localStorage.removeItem('loginTimestamp');
+            }
+
+            // Check if already validated and within the 2-hour window
             function checkPageAccess() {
-                // Check localStorage for previous validation
-                if (localStorage.getItem('careerPageAccess') === 'true') {
+                const isValidated = localStorage.getItem('careerPageAccess') === 'true';
+                const loginTimestamp = parseInt(localStorage.getItem('loginTimestamp'), 10);
+
+                // Check if the user is validated and the login hasn't expired
+                if (isValidated && loginTimestamp && !hasLoginExpired(loginTimestamp)) {
                     showPageContent();
                     return;
                 }
+
+                // If login has expired or no valid login exists, clear data and prompt for key
+                clearLoginData();
 
                 let attempts = 0;
                 const maxAttempts = 10; // Prevent infinite loop in case of repeated failure
@@ -288,6 +307,7 @@
                     if (userInput.trim() === CORRECT_ACCESS_KEY) {
                         // Successful validation
                         localStorage.setItem('careerPageAccess', 'true');
+                        localStorage.setItem('loginTimestamp', Date.now().toString());
                         showPageContent();
                         break;
                     } else {
