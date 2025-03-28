@@ -236,7 +236,7 @@
 
     <footer>
         <div class="footer-container">
-            <p>&copy; 2025 LogBinary. All rights reserved.</p>
+            <p>© 2025 LogBinary. All rights reserved.</p>
             <p><a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
         </div>
     </footer>
@@ -247,110 +247,51 @@
 
     <script>
         // Career Page Key Validation
-(function() {
-    // Secure key (replace with your actual secure key)
-    const CORRECT_ACCESS_KEY = 'your_secure_key_here';
+        (function() {
+            // Secure key (replace with your actual secure key)
+            const CORRECT_ACCESS_KEY = 'your_secure_key_here';
 
-    // Function to create and show the key validation modal
-    function createKeyValidationModal() {
-        // Create modal container
-        const modal = document.createElement('div');
-        modal.style.position = 'fixed';
-        modal.style.top = '0';
-        modal.style.left = '0';
-        modal.style.width = '100%';
-        modal.style.height = '100%';
-        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
-        modal.style.display = 'flex';
-        modal.style.justifyContent = 'center';
-        modal.style.alignItems = 'center';
-        modal.style.zIndex = '1000';
-        modal.style.fontFamily = 'Arial, sans-serif';
-
-        // Create modal content
-        const modalContent = document.createElement('div');
-        modalContent.style.backgroundColor = 'white';
-        modalContent.style.padding = '20px';
-        modalContent.style.borderRadius = '8px';
-        modalContent.style.textAlign = 'center';
-        modalContent.style.width = '300px';
-
-        // Title
-        const title = document.createElement('h2');
-        title.textContent = 'Access Required';
-        modalContent.appendChild(title);
-
-        // Error message
-        const errorMsg = document.createElement('div');
-        errorMsg.style.color = 'red';
-        errorMsg.style.marginBottom = '10px';
-        errorMsg.style.height = '20px';
-        modalContent.appendChild(errorMsg);
-
-        // Input field
-        const input = document.createElement('input');
-        input.type = 'password';
-        input.placeholder = 'Enter Access Key';
-        input.style.width = '100%';
-        input.style.padding = '10px';
-        input.style.marginBottom = '10px';
-        input.style.boxSizing = 'border-box';
-        modalContent.appendChild(input);
-
-        // Submit button
-        const submitBtn = document.createElement('button');
-        submitBtn.textContent = 'Access Page';
-        submitBtn.style.width = '100%';
-        submitBtn.style.padding = '10px';
-        submitBtn.style.backgroundColor = '#4CAF50';
-        submitBtn.style.color = 'white';
-        submitBtn.style.border = 'none';
-        submitBtn.style.borderRadius = '4px';
-        submitBtn.style.cursor = 'pointer';
-
-        // Event handling
-        function validateKey() {
-            if (input.value.trim() === CORRECT_ACCESS_KEY) {
-                // Remove modal on successful validation
-                document.body.removeChild(modal);
-                
-                // Optional: Store validation in localStorage to persist for the session
-                localStorage.setItem('careerPageAccess', 'true');
-                
-                // You can add additional initialization logic here
-            } else {
-                // Show error message
-                errorMsg.textContent = 'Incorrect access key';
-                input.value = '';
+            // Function to prompt for access key using browser popup
+            function promptForAccessKey() {
+                let userInput = prompt('Access Required\nEnter Access Key:');
+                return userInput;
             }
-        }
 
-        // Add event listeners
-        submitBtn.addEventListener('click', validateKey);
-        input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                validateKey();
+            // Check if already validated in this session
+            function checkPageAccess() {
+                // Check localStorage for previous validation
+                if (localStorage.getItem('careerPageAccess') !== 'true') {
+                    let attempts = 0;
+                    const maxAttempts = 10; // Prevent infinite loop in case of repeated failure
+
+                    while (attempts < maxAttempts) {
+                        const userInput = promptForAccessKey();
+                        if (userInput === null) {
+                            // User canceled the prompt, redirect or handle as needed
+                            window.location.href = '/'; // Redirect to homepage or another page
+                            return;
+                        }
+
+                        if (userInput.trim() === CORRECT_ACCESS_KEY) {
+                            // Successful validation
+                            localStorage.setItem('careerPageAccess', 'true');
+                            break;
+                        } else {
+                            alert('Incorrect access key. Please try again.');
+                            attempts++;
+                        }
+                    }
+
+                    if (attempts >= maxAttempts) {
+                        alert('Too many incorrect attempts. Redirecting...');
+                        window.location.href = '/'; // Redirect to homepage or another page
+                    }
+                }
             }
-        });
 
-        modalContent.appendChild(submitBtn);
-        modal.appendChild(modalContent);
-
-        return modal;
-    }
-
-    // Check if already validated in this session
-    function checkPageAccess() {
-        // Check localStorage for previous validation
-        if (localStorage.getItem('careerPageAccess') !== 'true') {
-            const modal = createKeyValidationModal();
-            document.body.appendChild(modal);
-        }
-    }
-
-    // Run validation on page load
-    document.addEventListener('DOMContentLoaded', checkPageAccess);
-})();
+            // Run validation on page load
+            document.addEventListener('DOMContentLoaded', checkPageAccess);
+        })();
 
         async function generateLink() {
             const generateButton = document.getElementById('generateButton');
