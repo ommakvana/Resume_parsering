@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, jsonify, url_for
+from flask import Flask, render_template, request, jsonify, redirect, session
+from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
@@ -102,20 +103,63 @@ def process_resume_in_background(file_path, filename, token, client_ip):
         if os.path.exists(file_path):
             os.remove(file_path)
 
-@app.route('/career')
-def index():
-    return render_template('generate_link.html')
+ACCESS_KEY = '7876'  # Replace with a strong, unique key
 
+# Optional: Hash the access key for added security
+HASHED_ACCESS_KEY = generate_password_hash(ACCESS_KEY)
+
+@app.route('/career', methods=['GET', 'POST'])
+def career_access():
+    # If user is already authenticated, redirect to the main career page
+    if session.get('career_authenticated', False):
+        return render_template('generate_link.html')  # Your existing career page template
+
+    # Handle key submission
+    if request.method == 'POST':
+        submitted_key = request.form.get('access_key', '')
+        
+        # Check if the submitted key is correct
+        if check_password_hash(HASHED_ACCESS_KEY, submitted_key):
+            # Set session to authenticated
+            session['career_authenticated'] = True
+            
+            # Redirect to the career page
+            return render_template('generate_link.html')
+        else:
+            # Incorrect key
+            return render_template('key_access.html', error='Invalid access key')
+
+    # Show key input page for GET requests
+    return render_template('key_access.html')
+
+# Create a logout route to remove authentication
+@app.route('/career/logout')
+def career_logout():
+    session.pop('career_authenticated', None)
+    return redirect('/career')
+
+# Modify existing routes to check for authentication
+def career_authentication_required(f):
+    def wrapper(*args, **kwargs):
+        if not session.get('career_authenticated', False):
+            return redirect('/career')
+        return f(*args, **kwargs)
+    wrapper.__name__ = f.__name__
+    return wrapper
+
+# Example of how to protect other career-related routes
 @app.route('/generate_link', methods=['POST'])
+@career_authentication_required
 def generate_link():
+    # Your existing generate_link logic
     token = generate_encrypted_token()
-    link = f"http://jobs.logbinary.com/career/{token}"
+    link = f"http://jobs.logbinary.com/apply/{token}"
     return jsonify({
         'link': link,
-        'expires_at': (datetime.now() + timedelta(hours=1)).isoformat()  # Optional, not enforced
+        'expires_at': (datetime.now() + timedelta(hours=1)).isoformat()
     })
 
-@app.route('/career/<token>', methods=['GET', 'POST'])
+@app.route('/apply/<token>', methods=['GET', 'POST'])
 def upload_resume(token):
     if not validate_token(token):
         return render_template('invalid_link.html'), 403
