@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, url_for
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 import os
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
@@ -17,6 +17,9 @@ app = Flask(__name__)
 
 # Secret key for encryption (replace with a secure key in production)
 app.config['SECRET_KEY'] = 'your-secure-secret-key-here'  # Change this to a strong secret
+
+# Set a simple password (change this as needed)
+ACCESS_KEY = "kem aapu"
 
 UPLOAD_FOLDER = 'temp_uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'docx', 'doc', 'rtf', 'txt', 'png', 'jpg'}
@@ -102,20 +105,32 @@ def process_resume_in_background(file_path, filename, token, client_ip):
         if os.path.exists(file_path):
             os.remove(file_path)
 
-@app.route('/career')
-def index():
-    return render_template('generate_link.html')
+@app.route('/career', methods=['GET', 'POST'])
+def career():
+    # Check if user is already authenticated
+    if session.get('authenticated'):
+        return redirect(url_for('generate_link'))
+
+    if request.method == 'POST':
+        key = request.form.get('key')
+        if key == ACCESS_KEY:
+            session['authenticated'] = True
+            return redirect(url_for('generate_link'))
+        else:
+            return render_template('career_key.html', error="Invalid Key")
+
+    return render_template('career_key.html')
 
 @app.route('/generate_link', methods=['POST'])
 def generate_link():
     token = generate_encrypted_token()
-    link = f"http://jobs.logbinary.com/career/{token}"
+    link = f"http://jobs.logbinary.com/apply/{token}"
     return jsonify({
         'link': link,
         'expires_at': (datetime.now() + timedelta(hours=1)).isoformat()  # Optional, not enforced
     })
 
-@app.route('/career/<token>', methods=['GET', 'POST'])
+@app.route('/apply/<token>', methods=['GET', 'POST'])
 def upload_resume(token):
     if not validate_token(token):
         return render_template('invalid_link.html'), 403
