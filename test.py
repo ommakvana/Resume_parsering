@@ -74,10 +74,18 @@ def generate_encrypted_token():
 
 def validate_token(token):
     try:
-        serializer.loads(token)
+        # Validate token and enforce a 1-hour (3600 seconds) expiration
+        data = serializer.loads(token, max_age=3600)  # max_age is in seconds (1 hour = 3600s)
         return True
     except BadSignature:
+        # Token is invalid or expired
         return False
+
+def get_client_ip():
+    forwarded_for = request.headers.get('X-Forwarded-For')
+    if forwarded_for:
+        return forwarded_for.split(',')[0].strip()
+    return request.remote_addr
 
 def has_ip_submitted(token, ip_address):
     session = Session()
@@ -241,9 +249,13 @@ def generate_link():
 @app.route('/apply/<token>', methods=['GET', 'POST'])
 def upload_resume(token):
     if not validate_token(token):
-        return render_template('invalid_link.html'), 403
+        return render_template('expired.html'), 403
 
-    client_ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+    # client_ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+    client_ip = get_client_ip()
+    print(f"X-Forwarded-For: {request.headers.get('X-Forwarded-For')}")
+    print(f"Remote Addr: {request.remote_addr}")
+    print(f"Detected client_ip: {client_ip}")
 
     # Check if the IP has already submitted a resume (either pending or processed)
     if has_ip_submitted(token, client_ip):
