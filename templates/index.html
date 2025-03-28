@@ -21,7 +21,7 @@
             line-height: 1.6;
             min-height: 100vh;
             padding-top: 100px;
-            padding-bottom: 60px
+            padding-bottom: 60px;
         }
 
         header {
@@ -93,71 +93,73 @@
 
         .upload-section, .preview-section {
             background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             margin-bottom: 20px;
-            width: 100%; /* Make the box full width */
-            max-width: 100%; /* Ensure it doesn't exceed container */
-            box-sizing: border-box; /* Include padding in width calculation */
-        }
-
-        #saveButton {
-            margin-top: 10px;
-        }
-        .section {
-            display: none;
-        }
-
-        .section.active {
-            display: block;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         .custom-file-upload {
             display: inline-block;
-            padding: 12px 24px;
-            background: #ff6b00;
-            color: #fff;
-            border-radius: 8px;
+            padding: 10px 20px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
             cursor: pointer;
-            font-weight: 500;
-            transition: background-color 0.3s ease;
-        }
-
-        .custom-file-upload:hover {
-            background: #ff5500;
+            margin-right: 10px;
         }
 
         input[type="file"] {
             display: none;
         }
 
+        #fileNames {
+            color: #666;
+            margin: 10px 0;
+            display: block;
+        }
+
+        #fileNames ul {
+            list-style-type: disc;
+            padding-left: 20px;
+            margin: 0;
+        }
+
+        #fileNames li {
+            margin-bottom: 5px;
+        }
+
         button {
-            background: #ff6b00;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            color: #fff;
-            font-size: 1em;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
+            padding: 10px 20px;
+            font-size: 16px;
             min-width: 120px;
             text-align: center;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #ff6b00;
+            color: white;
+            transition: background-color 0.3s;
         }
 
         button:hover {
-            background: #ff5500;
+            background-color: #ff5500;
         }
 
         button:disabled {
-            background: #ccc;
+            background-color: #cccccc;
             cursor: not-allowed;
         }
 
-        #fileNames {
-            margin: 15px 0;
-            color: #667085;
+        #saveButton {
+            margin-top: 20px;
+            display: block;
+            width: 200px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .preview-section {
@@ -174,21 +176,47 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 20px;
+            min-width: 1200px;
         }
 
         th, td {
-            padding: 10px;
             border: 1px solid #ddd;
+            padding: 8px;
             text-align: left;
-            font-size: 0.9em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         th {
-            background: #f4f6f9;
+            background-color: #f2f2f2;
+            font-weight: bold;
             position: sticky;
             top: 0;
         }
+
+        th:nth-child(1), td:nth-child(1) { width: 100px; }
+        th:nth-child(2), td:nth-child(2) { width: 150px; }
+        th:nth-child(3), td:nth-child(3) { width: 200px; }
+        th:nth-child(4), td:nth-child(4) { width: 120px; }
+        th:nth-child(5), td:nth-child(5) { width: 120px; }
+        th:nth-child(6), td:nth-child(6) { width: 100px; }
+        th:nth-child(7), td:nth-child(7) { width: 100px; }
+        th:nth-child(8), td:nth-child(8) { width: 150px; }
+        th:nth-child(9), td:nth-child(9) {
+            width: 300px;
+            white-space: normal;
+            max-height: 100px;
+            overflow-y: auto;
+            line-height: 1.4;
+            display: block;
+        }
+        th:nth-child(10), td:nth-child(10) { width: 100px; }
+        th:nth-child(11), td:nth-child(11) { width: 100px; }
+        th:nth-child(12), td:nth-child(12) { width: 150px; }
+        th:nth-child(13), td:nth-child(13) { width: 80px; }
+        th:nth-child(14), td:nth-child(14) { width: 200px; }
 
         #linkContainer {
             margin-top: 20px;
@@ -255,58 +283,68 @@
             h1 { 
                 font-size: 1.5em; 
             }
+            button {
+                width: 100%;
+            }
         }
-        /* Footer Styles */
+
         .footer {
-        background-color: #2d2d2d;
-        color: #ffffff;
-        padding: 15px 0;
-        text-align: center;
-        font-family: 'Inter', sans-serif;
-        position: absolute;
-        bottom: 0;
-        width: 100%;
-        left: 0;
-    }
-    .footer-container {
-        display: flex;
-        justify-content: space-around;
-        max-width: 1200px;
-        margin: 0 auto;
-        align-items: center;
-    }
-    .footer-section {
-        flex: 1;
-        padding: 0 15px;
-        border-right: 1px solid #444;
-    }
-    .footer-section:last-child {
-        border-right: none;
-    }
-    .footer-section h4 {
-        margin: 10px 0; /* Hide headings to match the screenshot */
-    }
-    .footer-section p {
-        font-size: 12px;
-        color: #dcdcdc;
-        margin: 5px 0;
-    }
-    .footer-bottom {
-        display: block;
-        margin-top: 10px;
-        font-size: 12px;
-        color: #bbb;
-    }
-    @media (max-width: 768px) {
+            background-color: #2d2d2d;
+            color: #ffffff;
+            padding: 15px 0;
+            text-align: center;
+            font-family: 'Inter', sans-serif;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            left: 0;
+        }
+
         .footer-container {
-            flex-direction: column;
+            display: flex;
+            justify-content: space-around;
+            max-width: 1200px;
+            margin: 0 auto;
+            align-items: center;
         }
+
         .footer-section {
-            border-right: none;
-            border-bottom: 1px solid #444;
-            padding: 10px 0;
+            flex: 1;
+            padding: 0 15px;
+            border-right: 1px solid #444;
         }
-    }
+
+        .footer-section:last-child {
+            border-right: none;
+        }
+
+        .footer-section h4 {
+            margin: 10px 0;
+        }
+
+        .footer-section p {
+            font-size: 12px;
+            color: #dcdcdc;
+            margin: 5px 0;
+        }
+
+        .footer-bottom {
+            display: block;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #bbb;
+        }
+
+        @media (max-width: 768px) {
+            .footer-container {
+                flex-direction: column;
+            }
+            .footer-section {
+                border-right: none;
+                border-bottom: 1px solid #444;
+                padding: 10px 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -365,7 +403,7 @@
                         <tbody id="resumeTableBody"></tbody>
                     </table>
                 </div>
-                <button id="saveButton" style="display: block; margin: 20px auto;">Save</button>
+                <button id="saveButton">Save</button>
             </div>
         </div>
     </div>
@@ -373,6 +411,7 @@
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
     </div>
+
     <footer class="footer">
         <div class="footer-container">
             <div class="footer-section">
@@ -394,7 +433,6 @@
                 <p><i class="fas fa-phone"></i> +1-647 478 1360</p>
             </div>
         </div>
-        
         <div class="footer-bottom">
             <p>Copyright © All Rights Reserved</p>
             <div class="social-icons">
@@ -404,16 +442,10 @@
         </div>
     </footer>
 
-    <!-- Existing script tags and content -->
-</body>
     <script>
-        // (All the original JavaScript remains the same as in the previous document)
-        // Access key protection, event listeners, and all other functions remain unchanged
-        
-        // The entire script from the original document is kept exactly the same
         (function() {
             const CORRECT_ACCESS_KEY = '7876';
-            const LOGIN_DURATION = 5000; // 5 seconds for testing
+            const LOGIN_DURATION = 5000;
             const pageTitle = document.getElementById('pageTitle');
             const linkSection = document.getElementById('linkSection');
             const uploadSection = document.getElementById('uploadSection');
@@ -432,20 +464,18 @@
             }
     
             function showPageContent() {
-                document.body.style.display = 'block'; // Show the page
+                document.body.style.display = 'block';
             }
     
             function checkPageAccess() {
                 const isValidated = localStorage.getItem('pageAccess') === 'true';
                 const loginTimestamp = parseInt(localStorage.getItem('loginTimestamp'), 10);
     
-                // If already validated and not expired, show content
                 if (isValidated && loginTimestamp && !hasLoginExpired(loginTimestamp)) {
                     showPageContent();
                     return;
                 }
     
-                // Clear any old data
                 clearLoginData();
     
                 let attempts = 0;
@@ -474,18 +504,16 @@
                 }
             }
     
-            // Initially hide the page until access is granted
             document.body.style.display = 'none';
             document.addEventListener('DOMContentLoaded', checkPageAccess);
     
-            // Tab switching logic with dynamic title
             document.getElementById('linkTab').addEventListener('click', function() {
                 linkSection.classList.add('active');
                 uploadSection.classList.remove('active');
                 this.classList.add('active');
                 document.getElementById('uploadTab').classList.remove('active');
                 document.getElementById('previewSection').style.display = 'none';
-                pageTitle.textContent = 'Generate Link'; // Update title
+                pageTitle.textContent = 'Generate Link';
             });
     
             document.getElementById('uploadTab').addEventListener('click', function() {
@@ -493,11 +521,10 @@
                 linkSection.classList.remove('active');
                 this.classList.add('active');
                 document.getElementById('linkTab').classList.remove('active');
-                pageTitle.textContent = 'Upload Resume'; // Update title
+                pageTitle.textContent = 'Upload Resume';
             });
         })();
 
-        // Remaining original scripts (generateLink, file upload, etc.) stay the same
         async function generateLink() {
             const generateButton = document.getElementById('generateButton');
             const loadingOverlay = document.getElementById('loadingOverlay');
@@ -525,7 +552,6 @@
             }
         }
     
-        // Upload and preview logic
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
@@ -560,7 +586,6 @@
                     return;
                 }
     
-                // Store file_references globally for use during save
                 window.fileReferences = data.file_references || {};
                 displayPreview(data.resumes);
             } catch (error) {
@@ -573,7 +598,6 @@
             }
         });
     
-        // File input change event for displaying and sorting file names
         document.getElementById('resumeInput').addEventListener('change', (e) => {
             const files = e.target.files;
             const fileNamesSpan = document.getElementById('fileNames');
@@ -609,7 +633,6 @@
             fileNamesSpan.appendChild(ul);
         });
     
-        // Function to display preview of uploaded resumes
         function displayPreview(resumes) {
             const tableBody = document.getElementById('resumeTableBody');
             tableBody.innerHTML = '';
@@ -643,7 +666,6 @@
             window.resumesToSave = resumes;
         }
     
-        // Save button event listener
         document.getElementById('saveButton').addEventListener('click', async () => {
             if (!window.resumesToSave || window.resumesToSave.length === 0) {
                 alert('No resumes to save!');
@@ -663,7 +685,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         resumes: window.resumesToSave,
-                        file_references: window.fileReferences // Send file references to the backend
+                        file_references: window.fileReferences
                     })
                 });
                 const result = await response.json();
@@ -671,7 +693,7 @@
                 alert(result.message);
                 document.getElementById('previewSection').style.display = 'none';
                 window.resumesToSave = [];
-                window.fileReferences = {}; // Clear file references after saving
+                window.fileReferences = {};
                 document.getElementById('resumeInput').value = '';
                 document.getElementById('fileNames').textContent = 'No file chosen';
             } catch (error) {
@@ -684,6 +706,5 @@
             }
         });
     </script>
-
 </body>
 </html>
