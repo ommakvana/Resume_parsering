@@ -10,6 +10,11 @@
             font-family: 'Poppins', sans-serif;
         }
 
+        .logo {
+            max-width: 150px; /* Adjust size as needed */
+            margin-bottom: 25px;
+        }
+
         body {
             background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
             min-height: 100vh;
@@ -146,6 +151,7 @@
 </head>
 <body>
     <div class="container">
+        <img src="company-logo.png" alt="Company Logo" class="logo">
         <h1>Generate Resume Link</h1>
         <button id="generateButton" onclick="generateLink()">Generate Link</button>
         <div id="linkContainer"></div>
