@@ -82,9 +82,11 @@ def validate_token(token):
         return False
 
 def get_client_ip():
-    forwarded_for = request.headers.get('X-Forwarded-For')
-    if forwarded_for:
-        return forwarded_for.split(',')[0].strip()
+    if request.headers.getlist("X-Forwarded-For"):
+        real_ip = request.headers.getlist("X-Forwarded-For")[0].strip()
+        print(f"🔍 Detected IP from X-Forwarded-For: {real_ip}")
+        return real_ip
+    print(f"🔍 Detected IP from remote_addr: {request.remote_addr}")
     return request.remote_addr
 
 def has_ip_submitted(token, ip_address):
