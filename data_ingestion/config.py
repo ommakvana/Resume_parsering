@@ -5,7 +5,7 @@ import os
 # Email settings
 LAST_CHECK_FILE = "last_email_check.pickle"
 
-USE_GMAIL = False
+USE_GMAIL = True
 if USE_GMAIL:
     EMAIL = "om.logbinary@gmail.com"
     PASSWORD = "bght egln bgok mrsu"  # Google App Password

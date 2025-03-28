@@ -33,7 +33,7 @@ class Resume(Base):
     ip_address = Column(String)
     filename = Column(String)
     token = Column(String)
-
+    
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 
@@ -102,25 +102,28 @@ def process_resume_in_background(file_path, filename, token, client_ip):
         if os.path.exists(file_path):
             os.remove(file_path)
 
-@app.route('/')
+@app.route('/career')
 def index():
     return render_template('generate_link.html')
 
 @app.route('/generate_link', methods=['POST'])
 def generate_link():
     token = generate_encrypted_token()
-    link = f"https://jobs.logbinary.com/submit/{token}"
+    link = f"http://jobs.logbinary.com/career/{token}"
     return jsonify({
         'link': link,
         'expires_at': (datetime.now() + timedelta(hours=1)).isoformat()  # Optional, not enforced
     })
 
-@app.route('/submit/<token>', methods=['GET', 'POST'])
+@app.route('/career/<token>', methods=['GET', 'POST'])
 def upload_resume(token):
     if not validate_token(token):
         return render_template('invalid_link.html'), 403
 
-    client_ip = request.remote_addr
+    client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+    if ',' in client_ip:
+        client_ip = client_ip.split(',')[0].strip()
+        
     print(f"Request from IP: {client_ip} for token: {token}")
 
     if has_ip_submitted(token, client_ip):
@@ -146,4 +149,4 @@ def upload_resume(token):
     return render_template('success.html')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=7700, debug=True)
+    pass
