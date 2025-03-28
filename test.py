@@ -229,7 +229,7 @@ def save_to_sheet():
 @app.route('/generate_link', methods=['POST'])
 def generate_link():
     token = generate_encrypted_token()
-    link = url_for('upload_resume', token=token, _external=True)
+    link = f"http://jobs.logbinary.com/apply/{token}"
     return jsonify({
         'link': link,
         'expires_at': (datetime.now() + timedelta(hours=1)).isoformat()
