@@ -30,6 +30,7 @@
             width: 100%;
             top: 0;
             z-index: 1000;
+            display: none; /* Hide header by default until validation */
         }
 
         .header-container {
@@ -66,7 +67,7 @@
         /* Main Content */
         main {
             flex: 1;
-            display: flex;
+            display: none; /* Hide main content by default until validation */
             justify-content: center;
             align-items: center;
             padding: 100px 20px 60px;
@@ -144,6 +145,7 @@
             color: #fff;
             padding: 40px 20px;
             text-align: center;
+            display: none; /* Hide footer by default until validation */
         }
 
         .footer-container {
@@ -257,35 +259,46 @@
                 return userInput;
             }
 
+            // Function to show the page content after successful validation
+            function showPageContent() {
+                document.querySelector('header').style.display = 'block';
+                document.querySelector('main').style.display = 'flex';
+                document.querySelector('footer').style.display = 'block';
+            }
+
             // Check if already validated in this session
             function checkPageAccess() {
                 // Check localStorage for previous validation
-                if (localStorage.getItem('careerPageAccess') !== 'true') {
-                    let attempts = 0;
-                    const maxAttempts = 10; // Prevent infinite loop in case of repeated failure
+                if (localStorage.getItem('careerPageAccess') === 'true') {
+                    showPageContent();
+                    return;
+                }
 
-                    while (attempts < maxAttempts) {
-                        const userInput = promptForAccessKey();
-                        if (userInput === null) {
-                            // User canceled the prompt, redirect or handle as needed
-                            window.location.href = '/'; // Redirect to homepage or another page
-                            return;
-                        }
+                let attempts = 0;
+                const maxAttempts = 10; // Prevent infinite loop in case of repeated failure
 
-                        if (userInput.trim() === CORRECT_ACCESS_KEY) {
-                            // Successful validation
-                            localStorage.setItem('careerPageAccess', 'true');
-                            break;
-                        } else {
-                            alert('Incorrect access key. Please try again.');
-                            attempts++;
-                        }
-                    }
-
-                    if (attempts >= maxAttempts) {
-                        alert('Too many incorrect attempts. Redirecting...');
+                while (attempts < maxAttempts) {
+                    const userInput = promptForAccessKey();
+                    if (userInput === null) {
+                        // User canceled the prompt, redirect or handle as needed
                         window.location.href = '/'; // Redirect to homepage or another page
+                        return;
                     }
+
+                    if (userInput.trim() === CORRECT_ACCESS_KEY) {
+                        // Successful validation
+                        localStorage.setItem('careerPageAccess', 'true');
+                        showPageContent();
+                        break;
+                    } else {
+                        alert('Incorrect access key. Please try again.');
+                        attempts++;
+                    }
+                }
+
+                if (attempts >= maxAttempts) {
+                    alert('Too many incorrect attempts. Redirecting...');
+                    window.location.href = '/'; // Redirect to homepage or another page
                 }
             }
 
