@@ -7,33 +7,40 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Arial', sans-serif;
+            font-family: 'Poppins', sans-serif;
         }
 
         body {
-            background: #f5f5f5;
+            background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            color: #333;
+            color: #2d3748;
         }
 
         .container {
-            background: #fff;
-            border-radius: 8px;
+            background: #ffffff;
+            border-radius: 16px;
             padding: 40px;
             width: 100%;
-            max-width: 450px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 550px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
             text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
         }
 
         h1 {
-            font-size: 2em;
-            margin-bottom: 25px;
-            font-weight: 700;
-            color: #222;
+            font-size: 2.2em;
+            margin-bottom: 30px;
+            font-weight: 600;
+            color: #1a202c;
+            background: linear-gradient(to right, #4c51bf, #9f7aea);
+            -webkit-text-fill-color: transparent;
         }
 
         form {
@@ -47,46 +54,54 @@
         }
 
         .custom-file-upload {
-            background: #007bff;
+            background: #4c51bf;
             color: #fff;
-            padding: 12px 20px;
-            border-radius: 5px;
+            padding: 14px 40px;
+            border-radius: 50px;
             text-align: center;
             cursor: pointer;
-            font-size: 1em;
+            font-size: 1.1em;
             font-weight: 500;
-            transition: background 0.3s ease;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 81, 191, 0.3);
         }
 
         .custom-file-upload:hover {
-            background: #0056b3;
+            background: #4349a0;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 81, 191, 0.5);
         }
 
         .file-name {
             font-size: 0.9em;
-            color: #666;
+            color: #4a5568;
             margin-top: -10px;
         }
 
         button {
-            background: #28a745;
+            background: #48bb78;
             border: none;
-            padding: 12px;
-            border-radius: 5px;
+            padding: 14px 40px;
+            border-radius: 50px;
             color: #fff;
-            font-size: 1em;
+            font-size: 1.1em;
             font-weight: 500;
             cursor: pointer;
-            transition: background 0.3s ease;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
         }
 
         button:hover {
-            background: #218838;
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(72, 187, 120, 0.5);
         }
 
         button:disabled {
-            background: #ccc;
+            background: #a0aec0;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
         .loading-overlay {
@@ -96,19 +111,19 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             justify-content: center;
             align-items: center;
             z-index: 1000;
         }
 
         .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #ddd;
-            border-top: 5px solid #007bff;
+            width: 60px;
+            height: 60px;
+            border: 6px solid #e2e8f0;
+            border-top: 6px solid #4c51bf;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s linear infinite;
         }
 
         @keyframes spin {
@@ -118,13 +133,17 @@
 
         @media (max-width: 600px) {
             .container {
-                margin: 15px;
-                padding: 25px;
+                margin: 20px;
+                padding: 30px;
             }
-            h1 { font-size: 1.5em; }
-            button, .custom-file-upload { font-size: 0.9em; }
+            h1 { font-size: 1.8em; }
+            button, .custom-file-upload { 
+                padding: 12px 30px; 
+                font-size: 1em;
+            }
         }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
