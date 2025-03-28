@@ -21,7 +21,6 @@
             flex-direction: column;
         }
 
-        /* Header Styles */
         header {
             background: #fff;
             padding: 10px 40px;
@@ -30,7 +29,7 @@
             width: 100%;
             top: 0;
             z-index: 1000;
-            display: none; /* Hide header by default until validation */
+            display: none;
         }
 
         .header-container {
@@ -64,10 +63,9 @@
             color: #ff6200;
         }
 
-        /* Main Content */
         main {
             flex: 1;
-            display: none; /* Hide main content by default until validation */
+            display: none;
             justify-content: center;
             align-items: center;
             padding: 100px 20px 60px;
@@ -139,13 +137,12 @@
             text-decoration: underline;
         }
 
-        /* Footer Styles */
         footer {
             background: #333;
             color: #fff;
             padding: 40px 20px;
             text-align: center;
-            display: none; /* Hide footer by default until validation */
+            display: none;
         }
 
         .footer-container {
@@ -162,7 +159,6 @@
             text-decoration: underline;
         }
 
-        /* Loading Overlay */
         .loading-overlay {
             display: none;
             position: fixed;
@@ -219,10 +215,8 @@
             <img src="https://www.logbinary.com/images/logo.png" alt="LogBinary Logo" class="logo">
             <nav>
                 <ul>
-                    <li><a href="#">Home</a></li>
-                    <li><a href="#">About</a></li>
-                    <li><a href="#">Services</a></li>
-                    <li><a href="#">Contact</a></li>
+                    <li><a href="/career">Generate Link</a></li>
+                    <li><a href="/">Upload Resume</a></li>
                 </ul>
             </nav>
         </div>
@@ -248,64 +242,41 @@
     </div>
 
     <script>
-        // Career Page Key Validation
         (function() {
-            // Secure key (replace with your actual secure key)
             const CORRECT_ACCESS_KEY = '7876';
-            // const LOGIN_DURATION = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
             const LOGIN_DURATION = 5000; // 5 seconds for testing
-            // Function to prompt for access key using browser popup
             function promptForAccessKey() {
-                let userInput = prompt('Access Required\nEnter Access Key:');
-                return userInput;
+                return prompt('Access Required\nEnter Access Key:');
             }
-
-            // Function to show the page content after successful validation
             function showPageContent() {
                 document.querySelector('header').style.display = 'block';
                 document.querySelector('main').style.display = 'flex';
                 document.querySelector('footer').style.display = 'block';
             }
-
-            // Function to check if the login has expired
             function hasLoginExpired(loginTimestamp) {
-                const currentTime = Date.now();
-                return (currentTime - loginTimestamp) > LOGIN_DURATION;
+                return (Date.now() - loginTimestamp) > LOGIN_DURATION;
             }
-
-            // Function to clear login data from localStorage
             function clearLoginData() {
                 localStorage.removeItem('careerPageAccess');
                 localStorage.removeItem('loginTimestamp');
             }
-
-            // Check if already validated and within the 2-hour window
             function checkPageAccess() {
                 const isValidated = localStorage.getItem('careerPageAccess') === 'true';
                 const loginTimestamp = parseInt(localStorage.getItem('loginTimestamp'), 10);
-
-                // Check if the user is validated and the login hasn't expired
                 if (isValidated && loginTimestamp && !hasLoginExpired(loginTimestamp)) {
                     showPageContent();
                     return;
                 }
-
-                // If login has expired or no valid login exists, clear data and prompt for key
                 clearLoginData();
-
                 let attempts = 0;
-                const maxAttempts = 10; // Prevent infinite loop in case of repeated failure
-
+                const maxAttempts = 10;
                 while (attempts < maxAttempts) {
                     const userInput = promptForAccessKey();
                     if (userInput === null) {
-                        // User canceled the prompt, redirect or handle as needed
-                        window.location.href = '/'; // Redirect to homepage or another page
+                        window.location.href = '/';
                         return;
                     }
-
                     if (userInput.trim() === CORRECT_ACCESS_KEY) {
-                        // Successful validation
                         localStorage.setItem('careerPageAccess', 'true');
                         localStorage.setItem('loginTimestamp', Date.now().toString());
                         showPageContent();
@@ -315,14 +286,11 @@
                         attempts++;
                     }
                 }
-
                 if (attempts >= maxAttempts) {
                     alert('Too many incorrect attempts. Redirecting...');
-                    window.location.href = '/'; // Redirect to homepage or another page
+                    window.location.href = '/';
                 }
             }
-
-            // Run validation on page load
             document.addEventListener('DOMContentLoaded', checkPageAccess);
         })();
 
