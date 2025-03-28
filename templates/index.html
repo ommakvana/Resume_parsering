@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resume Processor</title>
+    <title>Resume Processor & Link Generator</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
         * {
@@ -11,6 +11,14 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: #f5f6f5;
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding-top: 80px;
         }
 
         header {
@@ -48,14 +56,154 @@
             text-decoration: none;
             font-weight: 500;
             transition: color 0.3s;
+            cursor: pointer;
         }
 
-        nav a:hover {
+        nav a:hover, nav a.active {
             color: #ff6200;
         }
 
-        body {
-            padding-top: 80px; /* Adjust for fixed header */
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 2.2em;
+            margin-bottom: 30px;
+            font-weight: 600;
+            color: #ff6200;
+            text-align: center;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .upload-section h2, .link-section h2 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+
+        .custom-file-upload {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #ff6200;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        button {
+            background: #ff6200;
+            border: none;
+            padding: 14px 40px;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 1.1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #e55a00;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #fileNames {
+            margin: 10px 0;
+            color: #666;
+        }
+
+        .preview-section {
+            margin-top: 40px;
+            display: none;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #f5f6f5;
+        }
+
+        #linkContainer {
+            margin-top: 20px;
+            font-size: 1em;
+            color: #666;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #eee;
+        }
+
+        #linkContainer a {
+            color: #ff6200;
+            text-decoration: none;
+            font-weight: 500;
+            word-break: break-all;
+        }
+
+        #linkContainer a:hover {
+            text-decoration: underline;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 6px solid #fff;
+            border-top: 6px solid #ff6200;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         @media (max-width: 768px) {
@@ -72,6 +220,11 @@
                 text-align: center;
                 gap: 15px;
             }
+            .container {
+                margin: 20px;
+                padding: 15px;
+            }
+            h1 { font-size: 1.8em; }
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
@@ -82,17 +235,23 @@
             <img src="https://www.logbinary.com/images/logo.png" alt="LogBinary Logo" class="logo">
             <nav>
                 <ul>
-                    <li><a href="/career">Generate Link</a></li>
-                    <li><a href="/">Upload Resume</a></li>
+                    <li><a id="linkTab" class="active">Generate Link</a></li>
+                    <li><a id="uploadTab">Upload Resume</a></li>
                 </ul>
             </nav>
         </div>
     </header>
 
     <div class="container">
-        <h1>Resume Processor</h1>
-        
-        <div class="upload-section">
+        <h1>Resume Processor & Link Generator</h1>
+
+        <div id="linkSection" class="section link-section active">
+            <h2>Generate Temporary Resume Link</h2>
+            <button id="generateButton" onclick="generateLink()">Generate Link</button>
+            <div id="linkContainer"></div>
+        </div>
+
+        <div id="uploadSection" class="section upload-section">
             <h2>Upload Resumes</h2>
             <form id="uploadForm" enctype="multipart/form-data">
                 <label for="resumeInput" class="custom-file-upload">
@@ -103,36 +262,222 @@
                 <button type="submit">Upload</button>
             </form>
             <p>Max 10 resumes at a time</p>
-        </div>
 
-        <div class="preview-section" id="previewSection" style="display: none;">
-            <h2>Preview</h2>
-            <div class="table-wrapper">
-                <table id="resumeTable">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Name</th>
-                            <th>Email Id</th>
-                            <th>Contact No</th>
-                            <th>Current Location</th>
-                            <th>Category</th>
-                            <th>Total Experience</th>
-                            <th>Designation</th>
-                            <th>Skills</th>
-                            <th>CTC info</th>
-                            <th>No of companies</th>
-                            <th>Last company</th>
-                            <th>Loyalty %</th>
-                        </tr>
-                    </thead>
-                    <tbody id="resumeTableBody"></tbody>
-                </table>
+            <div class="preview-section" id="previewSection">
+                <h2>Preview</h2>
+                <div class="table-wrapper">
+                    <table id="resumeTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Name</th>
+                                <th>Email Id</th>
+                                <th>Contact No</th>
+                                <th>Current Location</th>
+                                <th>Category</th>
+                                <th>Total Experience</th>
+                                <th>Designation</th>
+                                <th>Skills</th>
+                                <th>CTC info</th>
+                                <th>No of companies</th>
+                                <th>Last company</th>
+                                <th>Loyalty %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resumeTableBody"></tbody>
+                    </table>
+                </div>
+                <button id="saveButton">Save</button>
             </div>
-            <button id="saveButton">Save</button>
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        // Tab switching logic
+        document.getElementById('linkTab').addEventListener('click', function() {
+            document.getElementById('linkSection').classList.add('active');
+            document.getElementById('uploadSection').classList.remove('active');
+            this.classList.add('active');
+            document.getElementById('uploadTab').classList.remove('active');
+            document.getElementById('previewSection').style.display = 'none';
+        });
+
+        document.getElementById('uploadTab').addEventListener('click', function() {
+            document.getElementById('uploadSection').classList.add('active');
+            document.getElementById('linkSection').classList.remove('active');
+            this.classList.add('active');
+            document.getElementById('linkTab').classList.remove('active');
+        });
+
+        // Access key protection (from generate_link.html)
+        (function() {
+            const CORRECT_ACCESS_KEY = '7876';
+            const LOGIN_DURATION = 5000; // 5 seconds for testing
+            function promptForAccessKey() {
+                return prompt('Access Required\nEnter Access Key:');
+            }
+            function hasLoginExpired(loginTimestamp) {
+                return (Date.now() - loginTimestamp) > LOGIN_DURATION;
+            }
+            function clearLoginData() {
+                localStorage.removeItem('pageAccess');
+                localStorage.removeItem('loginTimestamp');
+            }
+            function checkPageAccess() {
+                const isValidated = localStorage.getItem('pageAccess') === 'true';
+                const loginTimestamp = parseInt(localStorage.getItem('loginTimestamp'), 10);
+                if (isValidated && loginTimestamp && !hasLoginExpired(loginTimestamp)) {
+                    return;
+                }
+                clearLoginData();
+                let attempts = 0;
+                const maxAttempts = 10;
+                while (attempts < maxAttempts) {
+                    const userInput = promptForAccessKey();
+                    if (userInput === null) {
+                        window.location.href = '/';
+                        return;
+                    }
+                    if (userInput.trim() === CORRECT_ACCESS_KEY) {
+                        localStorage.setItem('pageAccess', 'true');
+                        localStorage.setItem('loginTimestamp', Date.now().toString());
+                        break;
+                    } else {
+                        alert('Incorrect access key. Please try again.');
+                        attempts++;
+                    }
+                }
+                if (attempts >= maxAttempts) {
+                    alert('Too many incorrect attempts. Redirecting...');
+                    window.location.href = '/';
+                }
+            }
+            document.addEventListener('DOMContentLoaded', checkPageAccess);
+        })();
+
+        // Generate link logic
+        async function generateLink() {
+            const generateButton = document.getElementById('generateButton');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const linkContainer = document.getElementById('linkContainer');
+
+            generateButton.disabled = true;
+            generateButton.textContent = 'Generating...';
+            loadingOverlay.style.display = 'flex';
+
+            try {
+                const response = await fetch('/generate_link', { method: 'POST' });
+                const data = await response.json();
+                linkContainer.innerHTML = `
+                    <p>Share this link:</p>
+                    <p><a href="${data.link}" target="_blank">${data.link}</a></p>
+                    <p>Expires at: ${new Date(data.expires_at).toLocaleString()}</p>
+                `;
+            } catch (error) {
+                console.error('Error generating link:', error);
+                linkContainer.innerHTML = '<p style="color: #e55a00;">Failed to generate link. Please try again.</p>';
+            } finally {
+                generateButton.disabled = false;
+                generateButton.textContent = 'Generate Link';
+                loadingOverlay.style.display = 'none';
+            }
+        }
+
+        // Upload and preview logic
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const previewSection = document.getElementById('previewSection');
+            const resumeTableBody = document.getElementById('resumeTableBody');
+
+            loadingOverlay.style.display = 'flex';
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                resumeTableBody.innerHTML = '';
+                data.resumes.forEach(resume => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${resume.Date || ''}</td>
+                        <td>${resume.Name || ''}</td>
+                        <td>${resume['Email Id'] || ''}</td>
+                        <td>${resume['Contact No'] || ''}</td>
+                        <td>${resume['Current Location'] || ''}</td>
+                        <td>${resume.Category || ''}</td>
+                        <td>${resume['Total Experience'] || ''}</td>
+                        <td>${resume.Designation || ''}</td>
+                        <td>${resume.Skills || ''}</td>
+                        <td>${resume['CTC info'] || ''}</td>
+                        <td>${resume['No of companies'] || ''}</td>
+                        <td>${resume['Last company'] || ''}</td>
+                        <td>${resume['Loyalty %'] || ''}</td>
+                    `;
+                    resumeTableBody.appendChild(row);
+                });
+                previewSection.style.display = 'block';
+            } catch (error) {
+                console.error('Error uploading files:', error);
+                alert('Failed to upload resumes.');
+            } finally {
+                loadingOverlay.style.display = 'none';
+            }
+        });
+
+        document.getElementById('resumeInput').addEventListener('change', function() {
+            const fileNames = Array.from(this.files).map(file => file.name).join(', ');
+            document.getElementById('fileNames').textContent = fileNames || 'No file chosen';
+        });
+
+        document.getElementById('saveButton').addEventListener('click', async function() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            loadingOverlay.style.display = 'flex';
+            try {
+                const response = await fetch('/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        resumes: Array.from(document.querySelectorAll('#resumeTableBody tr')).map(row => {
+                            const cells = row.querySelectorAll('td');
+                            return {
+                                Date: cells[0].textContent,
+                                Name: cells[1].textContent,
+                                'Email Id': cells[2].textContent,
+                                'Contact No': cells[3].textContent,
+                                'Current Location': cells[4].textContent,
+                                Category: cells[5].textContent,
+                                'Total Experience': cells[6].textContent,
+                                Designation: cells[7].textContent,
+                                Skills: cells[8].textContent,
+                                'CTC info': cells[9].textContent,
+                                'No of companies': cells[10].textContent,
+                                'Last company': cells[11].textContent,
+                                'Loyalty %': cells[12].textContent
+                            };
+                        })
+                    })
+                });
+                const data = await response.json();
+                alert(data.message);
+            } catch (error) {
+                console.error('Error saving data:', error);
+                alert('Failed to save resumes.');
+            } finally {
+                loadingOverlay.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>
