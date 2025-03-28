@@ -24,7 +24,7 @@
         /* Header Styles */
         header {
             background: #fff;
-            padding: 20px 40px;
+            padding: 10px 40px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             position: fixed;
             width: 100%;
@@ -41,7 +41,9 @@
         }
 
         .logo {
-            max-width: 150px;
+            max-width: 120px;
+            height: auto;
+            object-fit: contain;
         }
 
         nav ul {
@@ -67,7 +69,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 120px 20px 60px;
+            padding: 100px 20px 60px;
         }
 
         .container {
@@ -190,6 +192,10 @@
             .header-container {
                 flex-direction: column;
                 gap: 20px;
+                padding: 10px;
+            }
+            .logo {
+                max-width: 100px;
             }
             nav ul {
                 flex-direction: column;
