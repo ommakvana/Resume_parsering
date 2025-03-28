@@ -1,56 +1,169 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Link Expired</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Inter', sans-serif;
         }
 
         body {
-            background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f4f6f9;
+            color: #333;
+            line-height: 1.6;
             min-height: 100vh;
+            padding-top: 100px;
+            padding-bottom: 60px;
             display: flex;
             justify-content: center;
             align-items: center;
-            color: #2d3748;
+        }
+
+        header {
+            background: #fff;
+            padding: 15px 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            max-height: 50px;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 30px;
+        }
+
+        nav a {
+            color: #667085;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        nav a:hover, nav a.active {
+            color: #ff6b00;
+        }
+
+        nav a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #ff6b00;
         }
 
         .container {
-            background: #ffffff;
-            border-radius: 16px;
+            background: white;
+            border-radius: 8px;
             padding: 40px;
             width: 100%;
             max-width: 550px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             text-align: center;
-            transition: transform 0.3s ease;
-        }
-
-        .container:hover {
-            transform: translateY(-5px);
         }
 
         h1 {
             font-size: 2.2em;
             margin-bottom: 20px;
             font-weight: 600;
-            color: #1a202c;
-            background: linear-gradient(to right, #e53e3e, #f56565);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #ff6b00;
         }
 
         p {
             font-size: 1.1em;
-            color: #4a5568;
+            color: #667085;
             line-height: 1.6;
         }
 
-        @media (max-width: 600px) {
+        .footer {
+            background-color: #2d2d2d;
+            color: #ffffff;
+            padding: 15px 0;
+            text-align: center;
+            font-family: 'Inter', sans-serif;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            left: 0;
+        }
+
+        .footer-container {
+            display: flex;
+            justify-content: space-around;
+            max-width: 1200px;
+            margin: 0 auto;
+            align-items: center;
+        }
+
+        .footer-section {
+            flex: 1;
+            padding: 0 15px;
+            border-right: 1px solid #444;
+        }
+
+        .footer-section:last-child {
+            border-right: none;
+        }
+
+        .footer-section h4 {
+            margin: 10px 0;
+        }
+
+        .footer-section p {
+            font-size: 12px;
+            color: #dcdcdc;
+            margin: 5px 0;
+        }
+
+        .footer-bottom {
+            display: block;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #bbb;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 80px;
+            }
+            .header-container {
+                flex-direction: column;
+                gap: 15px;
+                padding: 10px;
+            }
+            .logo {
+                max-height: 40px;
+            }
+            nav ul {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
             .container {
                 margin: 20px;
                 padding: 30px;
@@ -59,12 +172,45 @@
             p { font-size: 1em; }
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
+    <header>
+        <div class="header-container">
+            <img src="https://www.logbinary.com/images/logo.png" alt="LogBinary Logo" class="logo">
+            <nav>
+                <ul>
+                    <li><a href="#" class="active">Link Expired</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
     <div class="container">
         <h1>Link Expired</h1>
         <p>This submission link is no longer valid. Please request a new link.</p>
     </div>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h4>Headquarter 🇮🇳</h4>
+                <p>A-204, Empire Business Hub, Science City Road, Sola, Ahmedabad - 380060, India</p>
+                <p>+91-931 678 9418</p>
+            </div>
+            <div class="footer-section">
+                <h4>Office 🇺🇸</h4>
+                <p>319 Washington St #2, Boston, MA 02135, United States</p>
+                <p>+1-617 359 3207, +1-617 837 6892</p>
+            </div>
+            <div class="footer-section">
+                <h4>Office 🇨🇦</h4>
+                <p>152-3030 Breakwater Ct, Mississauga, ON L5B 4N5, Canada</p>
+                <p>+1-647 478 1360</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>Copyright © All Rights Reserved</p>
+        </div>
+    </footer>
 </body>
 </html>
