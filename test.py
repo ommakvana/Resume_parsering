@@ -39,7 +39,7 @@ class Resume(Base):
     ip_address = Column(String)
     filename = Column(String)
     token = Column(String)
-    status = Column(String, default="pending")
+    status = Column(String, default='pending')
 
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
@@ -83,18 +83,10 @@ def has_ip_submitted(token, ip_address):
     session = Session()
     result = session.query(Resume).filter_by(token=token, ip_address=ip_address).first()
     session.close()
-    return result is not None  # Returns True if any record exists (pending or completed)
+    return result is not None
 
 def process_resume_in_background(file_path, filename, token, client_ip):
     try:
-        # Record the submission as "pending" immediately
-        session = Session()
-        new_resume = Resume(ip_address=client_ip, filename=filename, token=token, status="pending")
-        session.add(new_resume)
-        session.commit()
-        session.close()
-
-        # Process the resume
         if filename.lower().endswith('.pdf'):
             resume_text = extract_text_from_pdf(file_path)
         else:
@@ -114,11 +106,11 @@ def process_resume_in_background(file_path, filename, token, client_ip):
         with sheet_lock:
             write_to_google_sheet(parsed_data, SPREADSHEET_ID)
 
-        # Update status to "completed"
+        # Update status to 'processed' after successful processing
         session = Session()
-        resume = session.query(Resume).filter_by(token=token, ip_address=client_ip, filename=filename).first()
-        if resume:
-            resume.status = "completed"
+        resume_entry = session.query(Resume).filter_by(token=token, ip_address=client_ip, filename=filename).first()
+        if resume_entry:
+            resume_entry.status = 'processed'
             session.commit()
         session.close()
     except Exception as e:
@@ -253,6 +245,7 @@ def upload_resume(token):
 
     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
 
+    # Check if the IP has already submitted a resume (either pending or processed)
     if has_ip_submitted(token, client_ip):
         return render_template('already_submitted.html'), 403
 
@@ -270,11 +263,21 @@ def upload_resume(token):
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     file.save(file_path)
 
+    # Store the resume submission in the database with 'pending' status before threading
+    session = Session()
+    new_resume = Resume(ip_address=client_ip, filename=filename, token=token, status='pending')
+    session.add(new_resume)
+    session.commit()
+    session.close()
+
+    # Start the background processing thread
     thread = threading.Thread(target=process_resume_in_background, args=(file_path, filename, token, client_ip))
     thread.start()
 
     time.sleep(2)
+    # Immediately show the success page after starting the thread
     return render_template('success.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
+
