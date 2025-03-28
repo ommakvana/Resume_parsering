@@ -57,17 +57,21 @@ def fetch_resumes_from_email():
 
 def process_emails(mail):
     """Process emails and handle resume attachments."""
+    import pytz
+    
     new_files = 0
-
+    ist = pytz.timezone("Asia/Kolkata")
+    
     last_check_time = get_last_check_time()
-
-    if last_check_time.date() == datetime.now().date():
-        since_date = datetime.now().strftime("%d-%b-%Y")
-        print(f"📅 Checking emails from today at {last_check_time.strftime('%H:%M:%S')} to now...")
+    if last_check_time.tzinfo is None:
+        last_check_time_ist = ist.localize(last_check_time)
     else:
-        since_date = last_check_time.strftime("%d-%b-%Y")
-        print(f"📅 Checking emails from {since_date} to today...")
-
+        last_check_time_ist = last_check_time
+    
+    last_check_time_utc = last_check_time_ist.astimezone(pytz.UTC)
+    since_date = last_check_time_utc.strftime("%d-%b-%Y")
+    print(f"📅 Checking all emails since {since_date} (IST: {last_check_time_ist.strftime('%d-%b-%Y %H:%M:%S %Z')})...")
+    
     search_cmd = f'(SINCE "{since_date}")'
     print(f"🔍 Executing IMAP search command: {search_cmd}")
 
@@ -75,23 +79,18 @@ def process_emails(mail):
         if not os.path.exists(SAVE_DIR):
             os.makedirs(SAVE_DIR)
 
-        # Search for unread emails between yesterday and today
         status, messages = mail.search(None, search_cmd)
-
         if status != "OK":
             print(f"❌ Search failed with status: {status}, response: {messages}")
             return new_files
 
         if not messages[0]:
-            print(f"✅ No new emails since {since_date}.")
+            print(f"✅ No new emails since {since_date} (IST: {last_check_time_ist.strftime('%d-%b-%Y %H:%M:%S %Z')}).")
             return new_files
 
-        # Keep track of processed files with dates
         today = datetime.now().date()
         yesterday = today - timedelta(days=1)
         processed_files = {}
-        
-        # Load previously processed files if you want to maintain state between runs
         processed_files_path = os.path.join(SAVE_DIR, "processed_files.json")
         if os.path.exists(processed_files_path):
             try:
@@ -100,7 +99,6 @@ def process_emails(mail):
             except:
                 print("⚠️ Could not load processed files history")
 
-        # Process each email
         for msg_num in messages[0].split():
             status, msg_data = mail.fetch(msg_num, "(INTERNALDATE RFC822)")
             if status != "OK":
@@ -110,7 +108,6 @@ def process_emails(mail):
             for response_part in msg_data:
                 if isinstance(response_part, tuple):
                     email_date = None
-                    # internal_date = None
                     for part in response_part:
                         if isinstance(part, bytes) and part.startswith(b'INTERNALDATE'):
                             date_str = part.decode('utf-8')
@@ -119,8 +116,11 @@ def process_emails(mail):
                                 try:
                                     date_str = match.group(1)
                                     internal_date = email.utils.parsedate_to_datetime(date_str)
-                                    email_date = internal_date.strftime("%d/%m/%Y")
-                                    print(f"📅 Email received date: {email_date}")
+                                    if internal_date.tzinfo is None:
+                                        internal_date = pytz.UTC.localize(internal_date)
+                                    internal_date_ist = internal_date.astimezone(ist)
+                                    email_date = internal_date_ist.strftime("%d/%m/%Y")
+                                    print(f"📅 Email received date: {email_date} (IST)")
                                 except Exception as e:
                                     print(f"⚠️ Error parsing internal date: {e}")
 
@@ -128,14 +128,18 @@ def process_emails(mail):
                         if not email_date and msg["date"]:
                             try:
                                 parsed_date = email.utils.parsedate_to_datetime(msg["date"])
-                                email_date = parsed_date.strftime("%d/%m/%Y")
-                                print(f"📅 Using header date: {email_date}")
+                                if parsed_date.tzinfo is None:
+                                    parsed_date = pytz.UTC.localize(parsed_date)
+                                parsed_date_ist = parsed_date.astimezone(ist)
+                                email_date = parsed_date_ist.strftime("%d/%m/%Y")
+                                print(f"📅 Using header date: {email_date} (IST)")
                             except Exception as e:
                                 print(f"⚠️ Error parsing header date: {e}")
 
                         if not email_date:
-                            email_date = datetime.now().strftime("%d/%m/%Y")
-                            print(f"⚠️ No date found, using today: {email_date}")
+                            now_ist = datetime.now(pytz.UTC).astimezone(ist)
+                            email_date = now_ist.strftime("%d/%m/%Y")
+                            print(f"⚠️ No date found, using today: {email_date} (IST)")
 
                     sender = msg["from"]
                     subject = msg["subject"]
@@ -186,58 +190,75 @@ def process_emails(mail):
 
                     saved_files = []
                     file_links = {}
-                    for part in msg.walk():
-                        if part.get_content_disposition() == "attachment":
-                            filename = part.get_filename()
-                            if filename and filename.lower().endswith((".pdf", ".docx", ".doc", ".rtf", ".txt", ".png", ".jpg")):
-                                file_content = part.get_payload(decode=True)
-                                file_path = os.path.join(SAVE_DIR, filename)
-                                
-                                # Check if this file has been processed before
+                    attachment_processed = False
+                    
+                    attachments = [part for part in msg.walk() if part.get_content_disposition() == "attachment"]
+                    for part in attachments:
+                        filename = part.get_filename()
+                        if not filename or not filename.lower().endswith((".pdf", ".docx", ".doc", ".rtf", ".txt", ".png", ".jpg")):
+                            continue
+
+                        if attachment_processed:
+                            print(f"⏩ Skipping attachment: {filename} (valid resume already processed for this email)")
+                            continue
+
+                        file_content = part.get_payload(decode=True)
+                        file_path = os.path.join(SAVE_DIR, filename)
+                        
+                        file_date = None
+                        if filename in processed_files:
+                            file_date_str = processed_files[filename]
+                            try:
+                                file_date = datetime.strptime(file_date_str, "%Y-%m-%d").date()
+                            except:
                                 file_date = None
-                                if filename in processed_files:
-                                    file_date_str = processed_files[filename]
-                                    try:
-                                        file_date = datetime.strptime(file_date_str, "%Y-%m-%d").date()
-                                    except:
-                                        file_date = None
-                                
-                                # Skip if the file was already processed today
-                                if file_date and (file_date == today or file_date == yesterday):
-                                    print(f"⏩ Skipping: {filename} (already processed on {file_date.strftime('%Y-%m-%d')})")
-                                    continue
-                                
-                                # Process the file if it's either not seen before or not processed today
-                                with open(file_path, "wb") as f:
-                                    f.write(file_content)
-                                print(f"✅ Saved: {file_path}")
-                                
-                                # Update processed files record
-                                processed_files[filename] = today.strftime("%Y-%m-%d")
-                                
-                                # [Rest of your existing attachment processing code...]
-                                file_link = upload_to_google_drive(filename, file_content, gc)
-                                if file_link:
-                                    file_links[filename] = file_link
-                                    print(f"🔗 Generated link for {filename}: {file_link}")
+                        
+                        if file_date and (file_date == today or file_date == yesterday):
+                            print(f"⏩ Skipping: {filename} (already processed on {file_date.strftime('%Y-%m-%d')})")
+                            continue
+                        
+                        with open(file_path, "wb") as f:
+                            f.write(file_content)
+                        print(f"✅ Saved: {file_path}")
+                        
+                        processed_files[filename] = today.strftime("%Y-%m-%d")
+                        
+                        file_link = upload_to_google_drive(filename, file_content, gc)
+                        if file_link:
+                            file_links[filename] = file_link
+                            print(f"🔗 Generated link for {filename}: {file_link}")
 
-                                metadata = {"email_date": email_date}
-                                if ctc_info:
-                                    metadata["ctc_from_email"] = ctc_info
-                                if file_link:
-                                    metadata["drive_link"] = file_link
-                                    file_links[filename] = file_link
-                                if experience_from_email:  
-                                    metadata["experience_from_email"] = experience_from_email
+                        metadata = {"email_date": email_date}
+                        if ctc_info:
+                            metadata["ctc_from_email"] = ctc_info
+                        if file_link:
+                            metadata["drive_link"] = file_link
+                        if experience_from_email:  
+                            metadata["experience_from_email"] = experience_from_email
 
-                                save_email_metadata(filename, metadata)
-                                saved_files.append(filename)
-                                new_files += 1
-                                process_single_resume(filename, file_link, email_date)
+                        resume_data = process_single_resume(filename, file_link, email_date)
+                        print(f"ℹ️ Resume data extracted: {resume_data}")
+                        
+                        save_email_metadata(filename, metadata)
+                        saved_files.append(filename)
+                        new_files += 1
+
+                        # Fallback: If resume_data is None but we have content (like PDF extraction), assume it's valid
+                        if resume_data is None and filename.lower().endswith(".pdf"):
+                            attachment_processed = True
+                            print(f"✅ Attachment {filename} assumed as resume (PDF with content extracted), skipping remaining attachments")
+                            break
+                        # Normal case: Check for required fields
+                        elif resume_data and all(
+                            field in resume_data and resume_data[field] not in [None, "", [], {}]
+                            for field in ['name', 'experience', 'skills']
+                        ):
+                            attachment_processed = True
+                            print(f"✅ Attachment {filename} contains all required resume data, skipping remaining attachments")
+                            break
                 
             mail.store(msg_num, '+FLAGS', '\\Seen')
             
-        # Save the updated processed files record
         try:
             with open(processed_files_path, 'w') as f:
                 json.dump(processed_files, f)
