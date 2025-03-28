@@ -116,7 +116,7 @@ def process_resume_in_background(file_path, filename, token, client_ip):
         if os.path.exists(file_path):
             os.remove(file_path)
 
-@app.route('/')
+@app.route('/career')
 def index():
     return render_template('index.html')
 
