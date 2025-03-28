@@ -18,13 +18,13 @@
             color: #333;
             line-height: 1.6;
             min-height: 100vh;
-            padding-top: 80px;
+            padding-top: 100px; /* Increased to accommodate larger header */
         }
 
         header {
             background: #fff;
-            padding: 10px 40px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 15px 40px; /* Increased padding for better spacing */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* Softer shadow */
             position: fixed;
             width: 100%;
             top: 0;
@@ -36,11 +36,10 @@
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
-            align-items: center;
         }
 
         .logo {
-            max-width: 120px;
+            max-width: 100px; /* Slightly smaller logo for balance */
             height: auto;
             object-fit: contain;
         }
@@ -48,13 +47,14 @@
         nav ul {
             list-style: none;
             display: flex;
-            gap: 30px;
+            gap: 40px; /* Increased gap for better spacing */
         }
 
         nav a {
             color: #333;
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 600; /* Bolder text */
+            font-size: 1.1em; /* Slightly larger font */
             transition: color 0.3s;
             cursor: pointer;
         }
@@ -64,17 +64,18 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 600px; /* Narrower container for better focus */
             margin: 40px auto;
-            padding: 20px;
+            padding: 30px;
             background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1); /* Softer, larger shadow */
+            text-align: center;
         }
 
         h1 {
-            font-size: 2.2em;
-            margin-bottom: 30px;
+            font-size: 2em; /* Slightly smaller for balance */
+            margin-bottom: 20px;
             font-weight: 600;
             color: #ff6200;
             text-align: center;
@@ -95,11 +96,12 @@
 
         .custom-file-upload {
             display: inline-block;
-            padding: 10px 20px;
+            padding: 12px 25px; /* Slightly larger button */
             background: #ff6200;
             color: #fff;
             border-radius: 5px;
             cursor: pointer;
+            font-weight: 500;
         }
 
         input[type="file"] {
@@ -213,7 +215,7 @@
                 padding: 10px;
             }
             .logo {
-                max-width: 100px;
+                max-width: 80px;
             }
             nav ul {
                 flex-direction: column;
@@ -243,16 +245,14 @@
     </header>
 
     <div class="container">
-        <h1>Resume Processor & Link Generator</h1>
+        <h1 id="pageTitle">Generate Link</h1> <!-- Dynamic title -->
 
         <div id="linkSection" class="section link-section active">
-            <h2>Generate Temporary Resume Link</h2>
             <button id="generateButton" onclick="generateLink()">Generate Link</button>
             <div id="linkContainer"></div>
         </div>
 
         <div id="uploadSection" class="section upload-section">
-            <h2>Upload Resumes</h2>
             <form id="uploadForm" enctype="multipart/form-data">
                 <label for="resumeInput" class="custom-file-upload">
                     Choose Files
@@ -297,45 +297,47 @@
     </div>
 
     <script>
-        // Tab switching logic
-        document.getElementById('linkTab').addEventListener('click', function() {
-            document.getElementById('linkSection').classList.add('active');
-            document.getElementById('uploadSection').classList.remove('active');
-            this.classList.add('active');
-            document.getElementById('uploadTab').classList.remove('active');
-            document.getElementById('previewSection').style.display = 'none';
-        });
-
-        document.getElementById('uploadTab').addEventListener('click', function() {
-            document.getElementById('uploadSection').classList.add('active');
-            document.getElementById('linkSection').classList.remove('active');
-            this.classList.add('active');
-            document.getElementById('linkTab').classList.remove('active');
-        });
-
-        // Access key protection (from generate_link.html)
+        // Access key protection
         (function() {
             const CORRECT_ACCESS_KEY = '7876';
             const LOGIN_DURATION = 5000; // 5 seconds for testing
+            const pageTitle = document.getElementById('pageTitle');
+            const linkSection = document.getElementById('linkSection');
+            const uploadSection = document.getElementById('uploadSection');
+
             function promptForAccessKey() {
                 return prompt('Access Required\nEnter Access Key:');
             }
+
             function hasLoginExpired(loginTimestamp) {
                 return (Date.now() - loginTimestamp) > LOGIN_DURATION;
             }
+
             function clearLoginData() {
                 localStorage.removeItem('pageAccess');
                 localStorage.removeItem('loginTimestamp');
             }
+
+            function showPageContent() {
+                document.body.style.display = 'block'; // Show the page
+            }
+
             function checkPageAccess() {
                 const isValidated = localStorage.getItem('pageAccess') === 'true';
                 const loginTimestamp = parseInt(localStorage.getItem('loginTimestamp'), 10);
+
+                // If already validated and not expired, show content
                 if (isValidated && loginTimestamp && !hasLoginExpired(loginTimestamp)) {
+                    showPageContent();
                     return;
                 }
+
+                // Clear any old data
                 clearLoginData();
+
                 let attempts = 0;
                 const maxAttempts = 10;
+
                 while (attempts < maxAttempts) {
                     const userInput = promptForAccessKey();
                     if (userInput === null) {
@@ -345,18 +347,41 @@
                     if (userInput.trim() === CORRECT_ACCESS_KEY) {
                         localStorage.setItem('pageAccess', 'true');
                         localStorage.setItem('loginTimestamp', Date.now().toString());
+                        showPageContent();
                         break;
                     } else {
                         alert('Incorrect access key. Please try again.');
                         attempts++;
                     }
                 }
+
                 if (attempts >= maxAttempts) {
                     alert('Too many incorrect attempts. Redirecting...');
                     window.location.href = '/';
                 }
             }
+
+            // Initially hide the page until access is granted
+            document.body.style.display = 'none';
             document.addEventListener('DOMContentLoaded', checkPageAccess);
+
+            // Tab switching logic with dynamic title
+            document.getElementById('linkTab').addEventListener('click', function() {
+                linkSection.classList.add('active');
+                uploadSection.classList.remove('active');
+                this.classList.add('active');
+                document.getElementById('uploadTab').classList.remove('active');
+                document.getElementById('previewSection').style.display = 'none';
+                pageTitle.textContent = 'Generate Link'; // Update title
+            });
+
+            document.getElementById('uploadTab').addEventListener('click', function() {
+                uploadSection.classList.add('active');
+                linkSection.classList.remove('active');
+                this.classList.add('active');
+                document.getElementById('linkTab').classList.remove('active');
+                pageTitle.textContent = 'Upload Resume'; // Update title
+            });
         })();
 
         // Generate link logic
