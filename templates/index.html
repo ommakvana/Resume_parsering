@@ -78,9 +78,6 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 30px;
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
 
         h1 {
@@ -91,7 +88,8 @@
             text-align: center;
         }
 
-        .upload-section, .preview-section {
+        .section {
+            display: none;
             background: white;
             padding: 20px;
             border-radius: 8px;
@@ -100,6 +98,18 @@
             width: 100%;
             max-width: 100%;
             box-sizing: border-box;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .link-section {
+            text-align: center;
+        }
+
+        .upload-section {
+            text-align: left;
         }
 
         .custom-file-upload {
@@ -154,17 +164,21 @@
             cursor: not-allowed;
         }
 
+        .preview-section {
+            margin-top: 40px;
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
         #saveButton {
             margin-top: 20px;
             display: block;
             width: 200px;
             margin-left: auto;
             margin-right: auto;
-        }
-
-        .preview-section {
-            margin-top: 40px;
-            display: none;
         }
 
         .table-wrapper {
