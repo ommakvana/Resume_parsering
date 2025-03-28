@@ -14,6 +14,8 @@
         }
 
         body {
+            font-family: Arial, sans-serif;
+            margin: 0;
             background: #f4f6f9;
             color: #333;
             line-height: 1.6;
@@ -73,7 +75,7 @@
         }
 
         .container {
-            max-width: 500px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 30px;
             background: #fff;
@@ -89,6 +91,20 @@
             text-align: center;
         }
 
+        .upload-section, .preview-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            width: 100%; /* Make the box full width */
+            max-width: 100%; /* Ensure it doesn't exceed container */
+            box-sizing: border-box; /* Include padding in width calculation */
+        }
+
+        #saveButton {
+            margin-top: 10px;
+        }
         .section {
             display: none;
         }
@@ -126,6 +142,8 @@
             font-weight: 500;
             cursor: pointer;
             transition: background-color 0.3s ease;
+            min-width: 120px;
+            text-align: center;
         }
 
         button:hover {
