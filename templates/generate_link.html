@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generate Temporary Resume Link</title>
     <style>
         * {
@@ -10,27 +12,71 @@
             font-family: 'Poppins', sans-serif;
         }
 
-        .logo {
-            max-width: 150px; /* Adjust size as needed */
-            margin-bottom: 25px;
+        body {
+            background: #f5f6f5;
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        body {
-            background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
-            min-height: 100vh;
+        /* Header Styles */
+        header {
+            background: #fff;
+            padding: 20px 40px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            max-width: 150px;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 30px;
+        }
+
+        nav a {
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #ff6200;
+        }
+
+        /* Main Content */
+        main {
+            flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
-            color: #2d3748;
+            padding: 120px 20px 60px;
         }
 
         .container {
-            background: #ffffff;
-            border-radius: 16px;
+            background: #fff;
+            border-radius: 8px;
             padding: 40px;
-            width: 100%;
             max-width: 550px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             text-align: center;
             transition: transform 0.3s ease;
         }
@@ -43,67 +89,76 @@
             font-size: 2.2em;
             margin-bottom: 30px;
             font-weight: 600;
-            color: #1a202c;
-            background: linear-gradient(to right, #4c51bf, #9f7aea);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #ff6200;
         }
 
         button {
-            background: #4c51bf;
+            background: #ff6200;
             border: none;
             padding: 14px 40px;
-            border-radius: 50px;
+            border-radius: 5px;
             color: #fff;
             font-size: 1.1em;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(76, 81, 191, 0.3);
         }
 
         button:hover {
-            background: #4349a0;
+            background: #e55a00;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(76, 81, 191, 0.5);
         }
 
         button:disabled {
-            background: #a0aec0;
+            background: #ccc;
             cursor: not-allowed;
             transform: none;
-            box-shadow: none;
         }
 
         #linkContainer {
             margin-top: 30px;
             font-size: 1em;
-            color: #4a5568;
-            background: #f7fafc;
+            color: #666;
+            background: #f9f9f9;
             padding: 20px;
-            border-radius: 10px;
-            border: 1px solid #e2e8f0;
-        }
-
-        #linkContainer p {
-            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #eee;
         }
 
         #linkContainer a {
-            color: #4c51bf;
+            color: #ff6200;
             text-decoration: none;
             font-weight: 500;
-            display: inline-block;
             word-break: break-all;
-            max-height: 60px;
-            overflow-y: auto;
         }
 
         #linkContainer a:hover {
-            color: #9f7aea;
             text-decoration: underline;
         }
 
+        /* Footer Styles */
+        footer {
+            background: #333;
+            color: #fff;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        footer a {
+            color: #ff6200;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Loading Overlay */
         .loading-overlay {
             display: none;
             position: fixed;
@@ -114,14 +169,14 @@
             background: rgba(0, 0, 0, 0.6);
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 1001;
         }
 
         .spinner {
             width: 60px;
             height: 60px;
-            border: 6px solid #e2e8f0;
-            border-top: 6px solid #4c51bf;
+            border: 6px solid #fff;
+            border-top: 6px solid #ff6200;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
@@ -131,31 +186,54 @@
             100% { transform: rotate(360deg); }
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+            nav ul {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
             .container {
                 margin: 20px;
                 padding: 30px;
             }
             h1 { font-size: 1.8em; }
-            button { 
-                padding: 12px 30px; 
-                font-size: 1em;
-            }
-            #linkContainer {
-                padding: 15px;
-                font-size: 0.9em;
-            }
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <img src="company-logo.png" alt="Company Logo" class="logo">
-        <h1>Generate Resume Link</h1>
-        <button id="generateButton" onclick="generateLink()">Generate Link</button>
-        <div id="linkContainer"></div>
-    </div>
+    <header>
+        <div class="header-container">
+            <img src="https://www.logbinary.com/images/logo.png" alt="LogBinary Logo" class="logo">
+            <nav>
+                <ul>
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#">About</a></li>
+                    <li><a href="#">Services</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <h1>Generate Resume Link</h1>
+            <button id="generateButton" onclick="generateLink()">Generate Link</button>
+            <div id="linkContainer"></div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <p>&copy; 2025 LogBinary. All rights reserved.</p>
+            <p><a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
+        </div>
+    </footer>
 
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
@@ -181,7 +259,7 @@
                 `;
             } catch (error) {
                 console.error('Error generating link:', error);
-                linkContainer.innerHTML = '<p style="color: #e53e3e;">Failed to generate link. Please try again.</p>';
+                linkContainer.innerHTML = '<p style="color: #e55a00;">Failed to generate link. Please try again.</p>';
             } finally {
                 generateButton.disabled = false;
                 generateButton.textContent = 'Generate Link';
