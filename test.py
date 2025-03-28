@@ -17,7 +17,7 @@ from Google_work.google_drive import upload_to_google_drive
 app = Flask(__name__)
 
 # Configuration
-app.config['SECRET_KEY'] = 'your-secure-secret-key-here'  # Change this to a strong secret
+app.config['SECRET_KEY'] = 'your-secure-secret-key-here'
 UPLOAD_FOLDER = 'uploads'
 TEMP_STORAGE_FOLDER = 'temp_storage'
 ALLOWED_EXTENSIONS = {'pdf', 'docx', 'doc', 'rtf', 'txt', 'png', 'jpg'}
@@ -226,10 +226,6 @@ def save_to_sheet():
 
     return jsonify({'message': f'Successfully saved {success_count} out of {len(resumes)} resumes'})
 
-@app.route('/career')
-def career():
-    return render_template('generate_link.html')
-
 @app.route('/generate_link', methods=['POST'])
 def generate_link():
     token = generate_encrypted_token()
@@ -269,4 +265,4 @@ def upload_resume(token):
     return render_template('success.html')
 
 if __name__ == '__main__':
-    pass
+    app.run(debug=True)
