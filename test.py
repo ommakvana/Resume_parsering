@@ -109,7 +109,7 @@ def process_resume_in_background(file_path, filename, token, client_ip):
 def career():
     # Check if user is already authenticated
     if session.get('authenticated'):
-        return redirect(url_for('generate_link.html'))
+        return render_template('generate_link.html')
 
     if request.method == 'POST':
         key = request.form.get('key')
