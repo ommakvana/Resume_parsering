@@ -252,8 +252,8 @@
         (function() {
             // Secure key (replace with your actual secure key)
             const CORRECT_ACCESS_KEY = '7876';
-            const LOGIN_DURATION = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
-
+            // const LOGIN_DURATION = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+            const LOGIN_DURATION = 5000; // 5 seconds for testing
             // Function to prompt for access key using browser popup
             function promptForAccessKey() {
                 let userInput = prompt('Access Required\nEnter Access Key:');
