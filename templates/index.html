@@ -19,6 +19,7 @@
             line-height: 1.6;
             min-height: 100vh;
             padding-top: 100px;
+            padding-bottom: 60px
         }
 
         header {
@@ -239,62 +240,55 @@
         }
         /* Footer Styles */
         .footer {
-            background-color: #2d2d2d;
-            color: #ffffff;
-            padding: 40px 0;
-            text-align: center;
-            margin-top: 40px; /* Add some space between content and footer */
-        }
+        background-color: #2d2d2d;
+        color: #ffffff;
+        padding: 15px 0;
+        text-align: center;
+        font-family: 'Inter', sans-serif;
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        left: 0;
+    }
+    .footer-container {
+        display: flex;
+        justify-content: space-around;
+        max-width: 1200px;
+        margin: 0 auto;
+        align-items: center;
+    }
+    .footer-section {
+        flex: 1;
+        padding: 0 15px;
+        border-right: 1px solid #444;
+    }
+    .footer-section:last-child {
+        border-right: none;
+    }
+    .footer-section h4 {
+        display: none; /* Hide headings to match the screenshot */
+    }
+    .footer-section p {
+        font-size: 12px;
+        color: #dcdcdc;
+        margin: 5px 0;
+    }
+    .footer-bottom {
+        display: block;
+        margin-top: 10px;
+        font-size: 12px;
+        color: #bbb;
+    }
+    @media (max-width: 768px) {
         .footer-container {
-            display: flex;
-            justify-content: space-around;
-            flex-wrap: wrap;
-            max-width: 1200px;
-            margin: 0 auto;
+            flex-direction: column;
         }
         .footer-section {
-            flex: 1;
-            min-width: 250px;
-            margin-bottom: 20px;
+            border-right: none;
+            border-bottom: 1px solid #444;
+            padding: 10px 0;
         }
-        .footer-section h4 {
-            margin: 10px 0;
-            color: #fff;
-        }
-        .footer-section p {
-            font-size: 14px;
-            color: #dcdcdc;
-        }
-        .footer-section i {
-            font-size: 20px;
-            color: #f2f2f2;
-            margin-right: 10px;
-        }
-        .footer-bottom {
-            margin-top: 20px;
-            border-top: 1px solid #444;
-            padding-top: 15px;
-            font-size: 14px;
-            color: #bbb;
-            text-align: center;
-        }
-        .social-icons {
-            margin-top: 10px;
-        }
-        .social-icons a {
-            color: #ffffff;
-            font-size: 18px;
-            margin: 0 10px;
-            transition: 0.3s;
-        }
-        .social-icons a:hover {
-            color: #f2a900;
-        }
-        @media (max-width: 768px) {
-            .footer-container {
-                flex-direction: column;
-            }
-        }
+    }
     </style>
 </head>
 <body>
