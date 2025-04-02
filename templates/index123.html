@@ -1,0 +1,38 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Chat Assistant</title>
+    <link rel="stylesheet" href="/static/styles123.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Company Chat Assistant</h1>
+            <p>Ask about our services, jobs, or contact information</p>
+        </header>
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot-message">
+                    Hello! I'm your company assistant. How can I help you today?
+                </div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="userInput" placeholder="Type your message here...">
+                <button id="sendButton">Send</button>
+            </div>
+        </div>
+        <div class="upload-container" id="uploadContainer" style="display: none;">
+            <h3>Upload Resume</h3>
+            <form id="resumeUploadForm" enctype="multipart/form-data">
+                <input type="file" id="resumeFile" name="file" accept=".pdf,.docx">
+                <button type="submit" class="upload-button">Upload Resume</button>
+            </form>
+        </div>
+    </div>
+    <script src="/static/script123.js"></script>
+</body>
+</html>
+    
