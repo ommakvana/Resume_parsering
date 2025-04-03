@@ -264,7 +264,7 @@
                 </svg>
             </div>
             <div class="header-text">
-                <h1>Ask LogBinary <span class="status-badge">online</span></h1>
+                <h1>Ask XYZ <span class="status-badge">online</span></h1>
             </div>
             <div class="close-button">
                 <span>✕</span>
@@ -290,163 +290,169 @@
     </div>
 
     <script>
-        const chatBox = document.getElementById('chat-box');
-        const messageInput = document.getElementById('message-input');
-        const sendButton = document.getElementById('send-button');
+    const chatBox = document.getElementById('chat-box');
+    const messageInput = document.getElementById('message-input');
+    const sendButton = document.getElementById('send-button');
+    
+    // Connect to WebSocket
+    const socket = new WebSocket('ws://' + window.location.host + '/ws');
+    let isFirstMessage = true;
+    
+    socket.onopen = function(e) {
+        console.log('WebSocket connection established');
+    };
+    
+    socket.onmessage = function(event) {
+        console.log("Received message:", event.data);
         
-        // Connect to WebSocket
-        const socket = new WebSocket('ws://' + window.location.host + '/ws');
-        let isFirstMessage = true;
-        
-        socket.onopen = function(e) {
-            console.log('WebSocket connection established');
-        };
-        
-        socket.onmessage = function(event) {
-            console.log("Received message:", event.data);
+        // If this is the first message (welcome message), add preset questions after it
+        if (isFirstMessage && event.data !== "Typing...") {
+            addBotMessage(event.data);
+            addPresetQuestions();
+            isFirstMessage = false;
+        } else if (event.data !== "Typing...") {
+            addBotMessage(event.data);
+        }
+    };
+    
+    socket.onclose = function(event) {
+        if (event.wasClean) {
+            console.log(`Connection closed cleanly, code=${event.code} reason=${event.reason}`);
+        } else {
+            console.error('Connection died');
+        }
+    };
+    
+    socket.onerror = function(error) {
+        console.error(`WebSocket error: ${error.message}`);
+    };
+    
+    // Send message when button is clicked
+    sendButton.addEventListener('click', sendMessage);
+    
+    // Send message when Enter key is pressed
+    messageInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+    
+    function sendMessage() {
+        const message = messageInput.value.trim();
+        if (message) {
+            // Add user message to chat
+            addUserMessage(message);
             
-            // If this is the first message (welcome message), add preset questions after it
-            if (isFirstMessage && event.data !== "Typing...") {
-                addBotMessage(event.data);
-                addPresetQuestions();
-                isFirstMessage = false;
-            } else if (event.data !== "Typing...") {
-                addBotMessage(event.data);
-            }
-        };
-        
-        socket.onclose = function(event) {
-            if (event.wasClean) {
-                console.log(`Connection closed cleanly, code=${event.code} reason=${event.reason}`);
-            } else {
-                console.error('Connection died');
-            }
-        };
-        
-        socket.onerror = function(error) {
-            console.error(`WebSocket error: ${error.message}`);
-        };
-        
-        // Send message when button is clicked
-        sendButton.addEventListener('click', sendMessage);
-        
-        // Send message when Enter key is pressed
-        messageInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-        
-        function sendMessage() {
-            const message = messageInput.value.trim();
-            if (message) {
-                // Add user message to chat
-                addUserMessage(message);
-                
-                // Send message to server
-                socket.send(message);
-                
-                // Clear input field
-                messageInput.value = '';
-                
-                // Show typing indicator
-                showTypingIndicator();
+            // Send message to server
+            socket.send(message);
+            
+            // Clear input field
+            messageInput.value = '';
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            // Remove preset questions container if it exists
+            const presetContainer = document.getElementById('preset-questions-container');
+            if (presetContainer) {
+                presetContainer.remove();
             }
         }
+    }
+    
+    function addUserMessage(message) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', 'user-message');
         
-        function addUserMessage(message) {
+        messageElement.innerHTML = `
+            <div class="message-bubble">${message}</div>
+            <div class="user-avatar">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+            </div>
+        `;
+        
+        chatBox.appendChild(messageElement);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+    
+    function addBotMessage(message) {
+        // Remove typing indicator if it exists
+        const typingIndicator = document.getElementById('typing-indicator');
+        if (typingIndicator) typingIndicator.remove();
+        
+        if (message !== "Typing...") {
             const messageElement = document.createElement('div');
-            messageElement.classList.add('message', 'user-message');
+            messageElement.classList.add('message', 'bot-message');
             
             messageElement.innerHTML = `
-                <div class="message-bubble">${message}</div>
-                <div class="user-avatar">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                </div>
-            `;
-            
-            chatBox.appendChild(messageElement);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-        
-        function addBotMessage(message) {
-            // Remove typing indicator if it exists
-            const typingIndicator = document.getElementById('typing-indicator');
-            if (typingIndicator) typingIndicator.remove();
-            
-            if (message !== "Typing...") {
-                const messageElement = document.createElement('div');
-                messageElement.classList.add('message', 'bot-message');
-                
-                messageElement.innerHTML = `
-                    <div class="bot-avatar">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                        </svg>
-                    </div>
-                    <div class="message-bubble">${message}</div>
-                `;
-                
-                chatBox.appendChild(messageElement);
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }
-        }
-        
-        function showTypingIndicator() {
-            const typingElement = document.createElement('div');
-            typingElement.classList.add('message', 'bot-message');
-            typingElement.id = 'typing-indicator';
-            
-            typingElement.innerHTML = `
                 <div class="bot-avatar">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                     </svg>
                 </div>
-                <div class="message-bubble">Typing...</div>
+                <div class="message-bubble">${message}</div>
             `;
             
-            chatBox.appendChild(typingElement);
+            chatBox.appendChild(messageElement);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
+    }
+    
+    function showTypingIndicator() {
+        const typingElement = document.createElement('div');
+        typingElement.classList.add('message', 'bot-message');
+        typingElement.id = 'typing-indicator';
         
-        function addPresetQuestions() {
-    // Create preset questions container without the bot avatar
-    const presetContainer = document.createElement('div');
-    presetContainer.id = 'preset-questions-container';
-    presetContainer.classList.add('preset-questions-container');
+        typingElement.innerHTML = `
+            <div class="bot-avatar">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+            </div>
+            <div class="message-bubble">Typing...</div>
+        `;
+        
+        chatBox.appendChild(typingElement);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
     
-    presetContainer.innerHTML = `
-        <div class="preset-questions">
-            <button class="preset-question-button" data-question="I want to learn about LogBinary's services">I want to learn about LogBinary's services</button>
-            <button class="preset-question-button" data-question="I want to know about job openings">I want to know about job openings</button>
-            <button class="preset-question-button" data-question="I need LogBinary's contact details">I need LogBinary's contact details</button>
-        </div>
-    `;
-    
-    chatBox.appendChild(presetContainer);
-    chatBox.scrollTop = chatBox.scrollHeight;
-    
-    // Add event listeners to preset question buttons
-    const presetButtons = presetContainer.querySelectorAll('.preset-question-button');
-    presetButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const question = this.getAttribute('data-question');
-            addUserMessage(question);
-            socket.send(question);
-            showTypingIndicator();
-            
-            // Remove the preset questions container after a button is clicked
-            const presetContainer = document.getElementById('preset-questions-container');
-            if (presetContainer) {
-                presetContainer.remove();
-            }
+    function addPresetQuestions() {
+        // Create preset questions container without the bot avatar
+        const presetContainer = document.createElement('div');
+        presetContainer.id = 'preset-questions-container';
+        presetContainer.classList.add('preset-questions-container');
+        
+        presetContainer.innerHTML = `
+            <div class="preset-questions">
+                <button class="preset-question-button" data-question="I want to learn about LogBinary's services">I want to learn about LogBinary's services</button>
+                <button class="preset-question-button" data-question="I want to know about job openings">I want to know about job openings</button>
+                <button class="preset-question-button" data-question="I need contact details">I need contact details</button>
+            </div>
+        `;
+        
+        chatBox.appendChild(presetContainer);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        
+        // Add event listeners to preset question buttons
+        const presetButtons = presetContainer.querySelectorAll('.preset-question-button');
+        presetButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const question = this.getAttribute('data-question');
+                addUserMessage(question);
+                socket.send(question);
+                showTypingIndicator();
+                
+                // Remove the preset questions container after a button is clicked
+                const presetContainer = document.getElementById('preset-questions-container');
+                if (presetContainer) {
+                    presetContainer.remove();
+                }
+            });
         });
-    });
-}
-    </script>
+    }
+</script>
 </body>
 </html>
     
