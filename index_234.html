@@ -13,7 +13,7 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         }
         body {
-            background-color: #f9fafb;
+            background-color: #f8f9fa;
             height: 100vh;
             display: flex;
             justify-content: center;
@@ -23,173 +23,207 @@
             width: 400px;
             height: 650px;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            border: 1px solid #d9d9d9;
         }
         .chat-header {
-            background-color: #4f46e5;
-            padding: 16px 20px;
-            color: white;
+            background-color: #ffffff;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #d9d9d9;
+        }
+        .header-left {
             display: flex;
             align-items: center;
         }
-        .assistant-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #4f46e5, #a855f7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-right: 12px;
-        }
-        .assistant-avatar svg {
-            width: 20px;
-            height: 20px;
-            color: white;
-        }
-        .header-text {
-            flex-grow: 1;
-        }
-        .header-text h1 {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: center;
-        }
-        .status-badge {
-            margin-left: 8px;
-            background-color: rgba(255, 255, 255, 0.2);
-            color: white;
-            font-size: 11px;
-            padding: 2px 8px;
+        .built-in-badge {
+            background-color: #f2f3f3;
+            border: 1px solid #d9d9d9;
             border-radius: 12px;
-            font-weight: 500;
+            padding: 2px 8px;
+            font-size: 12px;
+            margin-left: 8px;
+            color: #232f3e;
         }
-        .header-text p {
-            font-size: 13px;
-            opacity: 0.9;
+        .header-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #232f3e;
+            display: flex;
+            align-items: center;
         }
-        .close-button {
+        .header-controls {
+            display: flex;
+            gap: 8px;
+        }
+        .control-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: #545b64;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             width: 24px;
             height: 24px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
         }
-        .close-button span {
-            color: white;
-            font-size: 14px;
-            line-height: 1;
+        .status-message {
+            padding: 8px 16px;
+            background-color: #f8f8f8;
+            border-bottom: 1px solid #d9d9d9;
+            font-size: 12px;
+            color: #545b64;
+            display: flex;
+            align-items: center;
+        }
+        .status-icon {
+            width: 8px;
+            height: 8px;
+            background-color: #2cbb5d;
+            border-radius: 50%;
+            margin-right: 6px;
         }
         .conversation {
             flex-grow: 1;
             overflow-y: auto;
-            padding: 20px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
             gap: 16px;
+            background-color: #ffffff;
         }
         .message {
             display: flex;
-            align-items: flex-start;
-            max-width: 85%;
+            max-width: 100%;
         }
         .user-message {
             justify-content: flex-end;
-            margin-left: auto;
         }
         .bot-message {
             justify-content: flex-start;
         }
-        .message-bubble {
-            padding: 12px 16px;
-            border-radius: 18px;
-            font-size: 14px;
-            line-height: 1.5;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-        .user-message .message-bubble {
-            background-color: #4f46e5;
-            color: white;
-            border-bottom-right-radius: 4px;
-        }
-        .bot-message .message-bubble {
-            background-color: #f3f4f6;
-            color: #374151;
-            border-bottom-left-radius: 4px;
-        }
-        .bot-avatar {
+        .avatar {
             width: 32px;
             height: 32px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #4f46e5, #a855f7);
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-right: 8px;
+            margin-right: 12px;
             flex-shrink: 0;
         }
+
+        .bot-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: #7558F7;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-shrink: 0;
+        }   
         .bot-avatar svg {
             width: 16px;
             height: 16px;
             color: white;
         }
         .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: #e5e7eb;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-left: 8px;
-            flex-shrink: 0;
+            background-color: #e9ebed;
         }
-        .user-avatar svg {
-            width: 16px;
-            height: 16px;
-            color: #6b7280;
+        .message-content {
+            max-width: calc(100% - 44px);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .message-bubble {
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #232f3e;
+            width: auto;
+            display: inline-block;
+        }
+        .user-message .message-bubble {
+            background-color: #f2f3f3;
+        }
+        .bot-message .message-bubble {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ebed;
+        }
+        .suggestion-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .suggestion-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+            align-items: flex-start;
+        }
+        .suggestion-button {
+            background-color: #e6e6fa;
+            border: none;
+            color: #161d26;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 14px;
+            line-height: 1.5;
+            text-align: left;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            width: auto;
+            display: inline-block;
+        }
+        .suggestion-button:hover {
+            background-color: #dadaf8;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
         }
         .input-container {
-            padding: 16px;
-            border-top: 1px solid #e5e7eb;
+            padding: 6px;
+            background-color: white;
+            border-top: 1px solid #d9d9d9;
         }
         .input-wrapper {
             display: flex;
             align-items: center;
-            background-color: #f3f4f6;
-            border-radius: 24px;
-            padding: 8px 16px;
+            background-color: white;
+            border: 1px solid #d9d9d9;
+            border-radius: 9px;
+            padding: 4px 12px;
             transition: all 0.2s ease;
         }
         .input-wrapper:focus-within {
-            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.3);
-            background-color: white;
+            box-shadow: 0 0 0 2px rgba(9, 114, 211, 0.3);
+            border-color: #0972d3;
         }
         #message-input {
             flex-grow: 1;
             border: none;
             outline: none;
             background: transparent;
-            padding: 8px 0;
-            font-size: 14px;
-            color: #374151;
+            padding: 4px 10px;
+            font-size: 15px;
+            color: #232f3e;
         }
         #message-input::placeholder {
-            color: #9ca3af;
+            color: #687078;
         }
         #send-button {
-            width: 36px;
-            height: 36px;
-            background-color: #4f46e5;
+            width: 32px;
+            height: 32px;
+            background-color: #7558F7;
             border-radius: 50%;
             border: none;
             display: flex;
@@ -198,260 +232,292 @@
             cursor: pointer;
             transition: all 0.2s ease;
         }
-        #send-button:hover {
-            background-color: #4338ca;
+        #send-button:disabled {
+            background-color: #e9ebed;
+            cursor: not-allowed;
         }
         .footer {
             padding: 12px 16px;
             text-align: center;
             font-size: 12px;
-            color: #6b7280;
-            border-top: 1px solid #f3f4f6;
+            color: #687078;
         }
         .footer a {
-            color: #4f46e5;
+            color: #0972d3;
             text-decoration: none;
         }
         .footer a:hover {
             text-decoration: underline;
         }
-        
-        /* Updated styles for preset questions */
-        .preset-questions-container {
-            margin-top: 12px;
-            position: sticky;
-            bottom: 0;
-            background: white;
-            padding: 12px 16px;
-            border-top: 1px solid #e5e7eb;
+        .arrow-icon {
+            color: white;
         }
-        .preset-questions {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .preset-question-button {
-            background-color: #f0f7ff;
-            border: 1px solid #dbeafe;
-            color: #4f46e5;
-            border-radius: 20px;
-            padding: 10px 16px;
-            font-size: 14px;
-            font-weight: 500;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-        .preset-question-button:hover {
-            background-color: #e0f2fe;
-            border-color: #bfdbfe;
-            transform: translateY(-1px);
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
-        }
-        .preset-question-button:active {
-            transform: translateY(0);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        @media (max-width: 480px) {
+            .chat-widget {
+                width: 95%;
+                height: 90vh;
+                border-radius: 4px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="chat-widget">
         <div class="chat-header">
-            <div class="assistant-avatar">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
+            <div class="header-left">
+                <span class="header-title">Ask LogBinary</span>
+                <span class="built-in-badge">built-in</span>
             </div>
-            <div class="header-text">
-                <h1>Ask XYZ <span class="status-badge">online</span></h1>
+            <div class="header-controls">
+                <button class="control-button">−</button>
+                <button class="control-button">×</button>
             </div>
-            <div class="close-button">
-                <span>✕</span>
-            </div>
+        </div>
+        
+        <div class="status-message">
+            <span class="status-icon"></span>
+            Our sales reps are online
         </div>
         
         <div id="chat-box" class="conversation"></div>
         
         <div class="input-container">
             <div class="input-wrapper">
-                <input type="text" id="message-input" placeholder="Ask about services, jobs, or contact...">
+                <input type="text" id="message-input" placeholder="Ask a question">
                 <button id="send-button">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16">
-                        <path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083l6-15Zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471-.47 1.178Z"/>
+                    <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                     </svg>
                 </button>
             </div>
         </div>
         
         <div class="footer">
-            By using this assistant, you agree to our <a href="#">Terms & Privacy</a>
+            By chatting, you agree to this <a href="#">disclaimer</a>.
         </div>
     </div>
 
     <script>
-    const chatBox = document.getElementById('chat-box');
-    const messageInput = document.getElementById('message-input');
-    const sendButton = document.getElementById('send-button');
+const chatBox = document.getElementById('chat-box');
+const messageInput = document.getElementById('message-input');
+const sendButton = document.getElementById('send-button');
+
+const socket = new WebSocket('ws://' + window.location.host + '/ws');
+let hasShownSuggestions = false;
+let lastBotMessage = null;
+
+socket.onopen = function(e) {
+    console.log('WebSocket connection established');
+};
+
+socket.onmessage = function(event) {
+    console.log("Received message:", event.data);
     
-    // Connect to WebSocket
-    const socket = new WebSocket('ws://' + window.location.host + '/ws');
-    let isFirstMessage = true;
-    
-    socket.onopen = function(e) {
-        console.log('WebSocket connection established');
-    };
-    
-    socket.onmessage = function(event) {
-        console.log("Received message:", event.data);
-        
-        // If this is the first message (welcome message), add preset questions after it
-        if (isFirstMessage && event.data !== "Typing...") {
+    if (event.data !== "Typing...") {
+        if (event.data !== lastBotMessage) {
             addBotMessage(event.data);
-            addPresetQuestions();
-            isFirstMessage = false;
-        } else if (event.data !== "Typing...") {
-            addBotMessage(event.data);
-        }
-    };
-    
-    socket.onclose = function(event) {
-        if (event.wasClean) {
-            console.log(`Connection closed cleanly, code=${event.code} reason=${event.reason}`);
-        } else {
-            console.error('Connection died');
-        }
-    };
-    
-    socket.onerror = function(error) {
-        console.error(`WebSocket error: ${error.message}`);
-    };
-    
-    // Send message when button is clicked
-    sendButton.addEventListener('click', sendMessage);
-    
-    // Send message when Enter key is pressed
-    messageInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            sendMessage();
-        }
-    });
-    
-    function sendMessage() {
-        const message = messageInput.value.trim();
-        if (message) {
-            // Add user message to chat
-            addUserMessage(message);
-            
-            // Send message to server
-            socket.send(message);
-            
-            // Clear input field
-            messageInput.value = '';
-            
-            // Show typing indicator
-            showTypingIndicator();
-            
-            // Remove preset questions container if it exists
-            const presetContainer = document.getElementById('preset-questions-container');
-            if (presetContainer) {
-                presetContainer.remove();
-            }
         }
     }
-    
-    function addUserMessage(message) {
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('message', 'user-message');
+};
+
+socket.onclose = function(event) {
+    if (event.wasClean) {
+        console.log(`Connection closed cleanly, code=${event.code} reason=${event.reason}`);
+    } else {
+        console.error('Connection died');
+    }
+};
+
+socket.onerror = function(error) {
+    console.error(`WebSocket error: ${error.message}`);
+};
+
+sendButton.addEventListener('click', sendMessage);
+
+messageInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        sendMessage();
+    }
+});
+
+function sendMessage() {
+    const message = messageInput.value.trim();
+    if (message) {
+        addUserMessage(message);
+        socket.send(message);
+        messageInput.value = '';
+        showTypingIndicator();
         
-        messageElement.innerHTML = `
+        const suggestionContainer = document.getElementById('suggestion-container');
+        if (suggestionContainer) {
+            suggestionContainer.remove();
+        }
+    }
+}
+
+function addUserMessage(message) {
+    const messageElement = document.createElement('div');
+    messageElement.classList.add('message', 'user-message');
+    
+    messageElement.innerHTML = `
+        <div class="message-content">
             <div class="message-bubble">${message}</div>
-            <div class="user-avatar">
+        </div>
+    `;
+    
+    chatBox.appendChild(messageElement);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function addBotMessage(message) {
+    const typingIndicator = document.getElementById('typing-indicator');
+    if (typingIndicator) typingIndicator.remove();
+    
+    if (message !== "Typing...") {
+        lastBotMessage = message;
+
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', 'bot-message');
+        
+        let messageContent = `
+            <div class="avatar bot-avatar">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                        </svg>
             </div>
+            <div class="message-content">
+                <div class="message-bubble">
+                    ${message}
+                </div>
         `;
+        
+        if (!hasShownSuggestions) {
+            messageContent += `
+                <div class="suggestion-container" id="suggestion-container">
+                    <div class="suggestion-buttons">
+                        <button class="suggestion-button" data-question="I want to learn about LogBinary's services">I want to learn about LogBinary's services</button>
+                        <button class="suggestion-button" data-question="I want to know about Job openings">I want to know about Job openings</button>
+                        <button class="suggestion-button" data-question="I need Contact Information">I need Contact Information</button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        messageContent += `</div>`;
+        messageElement.innerHTML = messageContent;
         
         chatBox.appendChild(messageElement);
         chatBox.scrollTop = chatBox.scrollHeight;
-    }
-    
-    function addBotMessage(message) {
-        // Remove typing indicator if it exists
-        const typingIndicator = document.getElementById('typing-indicator');
-        if (typingIndicator) typingIndicator.remove();
         
-        if (message !== "Typing...") {
-            const messageElement = document.createElement('div');
-            messageElement.classList.add('message', 'bot-message');
-            
-            messageElement.innerHTML = `
-                <div class="bot-avatar">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                    </svg>
-                </div>
-                <div class="message-bubble">${message}</div>
-            `;
-            
-            chatBox.appendChild(messageElement);
-            chatBox.scrollTop = chatBox.scrollHeight;
+        if (!hasShownSuggestions) {
+            const suggestionButtons = messageElement.querySelectorAll('.suggestion-button');
+            suggestionButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const question = this.getAttribute('data-question');
+                    addUserMessage(question);
+                    socket.send(question);
+                    showTypingIndicator();
+                    
+                    const suggestionContainer = document.getElementById('suggestion-container');
+                    if (suggestionContainer) {
+                        suggestionContainer.remove();
+                    }
+                });
+            });
+            hasShownSuggestions = true;
         }
     }
-    
-    function showTypingIndicator() {
-        const typingElement = document.createElement('div');
-        typingElement.classList.add('message', 'bot-message');
-        typingElement.id = 'typing-indicator';
+}
+
+function addGlobalStyles() {
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+        .message-bubble {
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #232f3e;
+            width: auto;
+            display: inline-block;
+            max-width: 100%;
+        }
         
-        typingElement.innerHTML = `
-            <div class="bot-avatar">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        .bot-message .message-bubble {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ebed;
+        }
+        
+        .welcome-message {
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        
+        .message-bubble ul, 
+        .message-bubble ol {
+            padding-left: 20px;
+            margin: 8px 0;
+        }
+        
+        .message-bubble li {
+            margin-bottom: 6px;
+        }
+        
+        .service-card {
+            border: 1px solid #e9ebed;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            background-color: #f8f9fa;
+        }
+        
+        .service-title {
+            font-weight: 600;
+            color: #0972d3;
+            margin-bottom: 6px;
+        }
+        
+        .service-description {
+            font-size: 13px;
+            color: #232f3e;
+        }
+        
+        .job-listing {
+            border-left: 3px solid #0972d3;
+            padding-left: 12px;
+            margin: 12px 0;
+        }
+        
+        .job-title {
+            font-weight: 600;
+            color: #232f3e;
+        }
+    `;
+    document.head.appendChild(styleElement);
+}
+
+window.addEventListener('DOMContentLoaded', addGlobalStyles);
+
+function showTypingIndicator() {
+    const typingElement = document.createElement('div');
+    typingElement.classList.add('message', 'bot-message');
+    typingElement.id = 'typing-indicator';
+    
+    typingElement.innerHTML = `
+        <div class="avatar bot-avatar">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                 </svg>
-            </div>
+        </div>
+        <div class="message-content">
             <div class="message-bubble">Typing...</div>
-        `;
-        
-        chatBox.appendChild(typingElement);
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
+        </div>
+    `;
     
-    function addPresetQuestions() {
-        // Create preset questions container without the bot avatar
-        const presetContainer = document.createElement('div');
-        presetContainer.id = 'preset-questions-container';
-        presetContainer.classList.add('preset-questions-container');
-        
-        presetContainer.innerHTML = `
-            <div class="preset-questions">
-                <button class="preset-question-button" data-question="I want to learn about LogBinary's services">I want to learn about LogBinary's services</button>
-                <button class="preset-question-button" data-question="I want to know about job openings">I want to know about job openings</button>
-                <button class="preset-question-button" data-question="I need contact details">I need contact details</button>
-            </div>
-        `;
-        
-        chatBox.appendChild(presetContainer);
-        chatBox.scrollTop = chatBox.scrollHeight;
-        
-        // Add event listeners to preset question buttons
-        const presetButtons = presetContainer.querySelectorAll('.preset-question-button');
-        presetButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const question = this.getAttribute('data-question');
-                addUserMessage(question);
-                socket.send(question);
-                showTypingIndicator();
-                
-                // Remove the preset questions container after a button is clicked
-                const presetContainer = document.getElementById('preset-questions-container');
-                if (presetContainer) {
-                    presetContainer.remove();
-                }
-            });
-        });
-    }
+    chatBox.appendChild(typingElement);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
 </script>
 </body>
 </html>

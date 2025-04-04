@@ -11,7 +11,9 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from groq import Groq  # Replace OpenAI with Gro
+from groq import Groq
+import csv
+import re
 
 # Set up logging
 logging.basicConfig(
@@ -25,101 +27,55 @@ logger = logging.getLogger("company_chatbot")
 load_dotenv()
 
 # API keys
-GROQ_API_KEY = "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"  # Add to .env
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 if not GROQ_API_KEY:
-    raise ValueError("GROQ_API_KEY is not set in environment variables")
+    logger.warning("GROQ_API_KEY not found in environment variables, using fallback method")
+    GROQ_API_KEY = "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"
 
-COMPANY_CONFIG = {
-    "company_name": "LogBinary",
-    "services": [
-        {
-            "id": "service1",
-            "name": "Python Development",
-            "description": "Custom Python solutions for web applications, APIs, and automation.",
-            "details": "With Python we are building highly scalable server side applications. Using Django we can build any web based applications, APIs etc."
-        },
-        {
-            "id": "service2",
-            "name": "ML / AI",
-            "description": "AI-driven solutions leveraging Machine Learning and Deep Learning.",
-            "details": "Using Machine learning and Deep learning algorithms we build artificial intelligence products for various dynamic business needs."
-        },
-        {
-            "id": "service3",
-            "name": "Application Development",
-            "description": "End-to-end mobile and web application development for businesses.",
-            "details": "We Develop Mobile applications in Android and Flutter for various businesses. Design, Development, API Integrations, etc."
-        },
-    ],
-    "careers": [
-        {
-            "id": "job1",
-            "title": "Frontend Developer",
-            "department": "Engineering",
-            "type": "Full-time",
-            "location": "on-site",
-            "description": "We're looking for an experienced Frontend Developer to join our team. Proficiency in React, Vue, or Angular required."
-        },
-        {
-            "id": "job2",
-            "title": "UX/UI Designer",
-            "department": "Design",
-            "type": "Full-time",
-            "location": "Hybrid",
-            "description": "Seeking a creative UX/UI Designer to craft beautiful, intuitive interfaces for our clients' projects."
-        },
-    ],
-    "contact_info": {
-        "email": "info@logbinary.com",
-        "phone": "+91-931 678 9418",
-        "hours": "Monday to Friday, 10:00 AM - 7:00 PM IST"
+def load_company_data():
+    """Load company data from CSV files"""
+    company_data = {
+        "company_name": "LogBinary",
+        "services": [],
+        "careers": [],
+        "contact_info": {}
     }
-}
+    
+    if os.path.exists("services.csv"):
+        with open("services.csv", "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            company_data["services"] = list(reader)
+    else:
+        logger.warning("services.csv file not found")
+    
+    if os.path.exists("jobs.csv"):
+        with open("jobs.csv", "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            jobs = []
+            for row in reader:
+                if "requirements" in row:
+                    row["requirements"] = row["requirements"].split(",")
+                if "benefits" in row:
+                    row["benefits"] = row["benefits"].split(",")
+                jobs.append(row)
+            company_data["careers"] = jobs
+    else:
+        logger.warning("jobs.csv file not found")
+    
+    if os.path.exists("contact_info.csv"):
+        with open("contact_info.csv", "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                company_data["contact_info"][row["key"]] = row["value"]
+    else:
+        logger.warning("contact_info.csv file not found")
+    
+    return company_data
 
-JOB_OPPORTUNITIES = [
-    {
-        "id": "job1",
-        "title": "Frontend Developer",
-        "department": "Engineering",
-        "type": "Full-time",
-        "location": "On-site",
-        "description": "We're looking for an experienced Frontend Developer to join our team. Proficiency in React, Vue, or Angular required.",
-        "requirements": [
-            "3+ years of experience with modern JavaScript frameworks",
-            "Strong HTML/CSS skills",
-            "Experience with responsive design",
-            "Knowledge of state management solutions"
-        ],
-        "benefits": [
-            "Competitive salary",
-            "Health insurance",
-            "Flexible working hours",
-            "Professional development budget"
-        ]
-    },
-    {
-        "id": "job2",
-        "title": "Machine Learning Engineer",
-        "department": "AI Research",
-        "type": "Full-time",
-        "location": "Remote",
-        "description": "Join our AI team to develop cutting-edge machine learning solutions for real-world problems.",
-        "requirements": [
-            "MS or PhD in Computer Science or related field",
-            "Experience with PyTorch or TensorFlow",
-            "Strong understanding of ML algorithms",
-            "Experience deploying ML models to production"
-        ],
-        "benefits": [
-            "Top-tier compensation",
-            "Remote-first culture",
-            "Research publication opportunities",
-            "Access to high-performance computing resources"
-        ]
-    }
-]
+COMPANY_DATA = load_company_data()
+COMPANY_CONFIG = COMPANY_DATA
+JOB_OPPORTUNITIES = COMPANY_DATA["careers"]
 
-# Pydantic models (unchanged)
 class ServiceInquiry(BaseModel):
     name: str = Field(description="Customer's full name")
     email: str = Field(description="Customer's email address")
@@ -133,7 +89,6 @@ class JobApplication(BaseModel):
     resume_link: str = Field(description="Link to resume")
     cover_letter: Optional[str] = Field(default=None, description="Optional cover letter")
 
-# Base Tool class and tool implementations (unchanged)
 class BaseTool:
     name: str
     description: str
@@ -195,6 +150,7 @@ class SubmitServiceInquiryTool(BaseTool):
             "email": email,
             "service_name": service["name"]
         }
+
 class SubmitJobApplicationTool(BaseTool):
     name = "submit_job_application"
     description = "Submit a job application from a potential candidate and return confirmation data."
@@ -210,14 +166,13 @@ class SubmitJobApplicationTool(BaseTool):
             "email": email,
             "job_title": job["title"]
         }
-    
+
 class GetContactInfoTool(BaseTool):
     name = "get_contact_info"
     description = "Retrieve the contact information for LogBinary as raw data."
     def _run(self, query: Optional[str] = None) -> Dict:
         return COMPANY_CONFIG["contact_info"]
-    
-# LLM Provider Classes (Updated for Groq)
+
 class LLMProvider:
     def __init__(self, model: str, api_key: Optional[str] = None):
         self.model = model
@@ -226,34 +181,85 @@ class LLMProvider:
         raise NotImplementedError("Subclasses must implement invoke method")
 
 class GroqLLM(LLMProvider):
-    def __init__(self, model: str = "gemma2-9b-it", api_key: Optional[str] = None):
+    def __init__(
+        self, 
+        model: str = "gemma2-9b-it", 
+        api_key: Optional[str] = None,
+        fallback_models: Optional[List[str]] = None
+    ):
         super().__init__(model, api_key or GROQ_API_KEY)
         self.client = Groq(api_key=self.api_key)
+        self.fallback_models = fallback_models or ["qwen-2.5-32b", "llama3-70b-8192"]
+        self.current_model_index = 0
+        self.models = [model] + self.fallback_models
+    
+    def _get_current_model(self) -> str:
+        return self.models[self.current_model_index]
+    
+    def _try_next_model(self) -> bool:
+        """Try switching to the next model in the fallback list.
+        Returns True if successfully switched, False if no more models to try."""
+        if self.current_model_index < len(self.models) - 1:
+            self.current_model_index += 1
+            logger.info(f"Switching to fallback model: {self._get_current_model()}")
+            return True
+        return False
     
     def invoke(self, messages: List[Dict], functions: Optional[List] = None) -> Dict:
-        try:
-            api_args = {
-                "model": self.model,
-                "messages": messages,
-                "temperature": 0.3,
-                "max_tokens": 1024,
-            }
-            if functions:
-                api_args["tools"] = [{"type": "function", "function": func} for func in functions]
-            completion = self.client.chat.completions.create(**api_args)
-            if not completion or not getattr(completion, "choices", None):
-                logger.error("No choices returned in API response: %s", completion)
-                return {"role": "assistant", "content": "I'm having trouble connecting to my services. Please try again in a moment."}
-            return completion.choices[0].message
-        except Exception as e:
-            logger.error(f"Error calling Groq: {e}")
-            logger.error(traceback.format_exc())
-            return {"content": "I'm sorry, there was an error processing your request. Please try again.", "role": "assistant"}
+        attempts = 0
+        max_attempts = len(self.models)
+        
+        while attempts < max_attempts:
+            try:
+                current_model = self._get_current_model()
+                logger.info(f"Attempting request with model: {current_model}")
+                
+                api_args = {
+                    "model": current_model,
+                    "messages": messages,
+                    "temperature": 0.3,
+                    "max_tokens": 1024,
+                }
+                
+                if functions:
+                    api_args["tools"] = [{"type": "function", "function": func} for func in functions]
+                
+                completion = self.client.chat.completions.create(**api_args)
+                
+                if not completion or not getattr(completion, "choices", None):
+                    logger.error(f"No choices returned in API response for model {current_model}: {completion}")
+                    if not self._try_next_model():
+                        return {"role": "assistant", "content": "I'm having trouble connecting to my services. Please try again in a moment."}
+                else:
+                    # Success! Reset to preferred model for next call
+                    if self.current_model_index > 0:
+                        self.current_model_index = 0
+                    return completion.choices[0].message
+                    
+            except Exception as e:
+                error_message = str(e).lower()
+                attempts += 1
+                
+                # Check for rate limit or quota-related errors
+                if any(term in error_message for term in ["rate limit", "quota", "capacity", "too many requests", "429"]):
+                    logger.warning(f"Rate limit hit for model {self._get_current_model()}: {e}")
+                    if not self._try_next_model():
+                        logger.error("All models exhausted. No more fallbacks available.")
+                        break
+                else:
+                    # For other errors, log and break the retry loop
+                    logger.error(f"Error calling Groq with model {self._get_current_model()}: {e}")
+                    logger.error(traceback.format_exc())
+                    break
+        
+        return {"content": "I'm sorry, there was an error processing your request. Please try again later.", "role": "assistant"}
 
 def get_llm_provider() -> LLMProvider:
-    if GROQ_API_KEY:
+    try:
         return GroqLLM()
-    raise ValueError("GROQ_API_KEY is not configured.")
+    except Exception as e:
+        logger.error(f"Failed to initialize Groq LLM: {e}")
+        raise ValueError("Failed to initialize any LLM provider.")
 
 def create_company_agent():
     llm = get_llm_provider()
@@ -275,41 +281,41 @@ def create_company_agent():
         } for tool in tools
     ]
     system_message = {
-    "role": "system",
-    "content": """
-    # LogBinary AI Assistant
+        "role": "system",
+        "content": """
+        # LogBinary AI Assistant
 
-    You are LogBinary's dedicated AI assistant, designed to provide exceptional support to website visitors seeking information about our company offerings, career opportunities, and communication channels.
+        You are LogBinary's dedicated AI assistant, designed to provide exceptional support to website visitors seeking information about our company offerings, career opportunities, and communication channels.
 
-    ## Core Responsibilities
+        ## Core Responsibilities
 
-    - **Information Accuracy**: Always utilize designated data retrieval tools to fetch current and correct information.
-    - **Professional Representation**: Embody LogBinary's values of expertise, reliability, and client-centered service in every interaction.
-    - **Efficient Assistance**: Deliver clear, concise responses that address visitor inquiries with precision.
+        - **Information Accuracy**: Always utilize designated data retrieval tools to fetch current and correct information.
+        - **Professional Representation**: Embody LogBinary's values of expertise, reliability, and client-centered service in every interaction.
+        - **Efficient Assistance**: Deliver clear, concise responses that address visitor inquiries with precision.
 
-    ## Interaction Guidelines
+        ## Interaction Guidelines
 
-    When engaging with visitors, please:
+        When engaging with visitors, please:
 
-    - Welcome new users with a brief, professional greeting that establishes a positive first impression.Avoid followup with the services details. For example, if a user says "hello" or similar, respond with a greeting like "Hi there! 👋 I'm LogBinary's virtual assistant. How can I help you today?" and avoid listing services unless explicitly asked.
-    - Maintain a warm yet professional tone that balances approachability with expertise.
-    - Focus responses on precisely addressing the query without unnecessary elaboration.
-    - Always fetch fresh information using tools when asked about services, jobs, or contact details, even if similar questions were asked before.
-    - Acknowledge when information falls outside your available resources rather than providing uncertain answers.
-    - When a tool returns data (e.g., a list of services or jobs), craft a natural, conversational response using that data. For example, if `get_services_list` returns a list of services. 
+        - Welcome new users with a brief, professional greeting that establishes a positive first impression. Avoid followup with the services details. avoid listing services unless explicitly asked.
+        - Maintain a warm yet professional tone that balances approachability with expertise.
+        - Focus responses on precisely addressing the query without unnecessary elaboration.
+        - Always fetch fresh information using tools when asked about services, jobs, or contact details, even if similar questions were asked before.
+        - Acknowledge when information falls outside your available resources rather than providing uncertain answers.
+        - When a tool returns data (e.g., a list of services or jobs), craft a natural, conversational response using that data.
 
-    ## Information Retrieval Protocols
+        ## Information Retrieval Protocols
 
-    For specific inquiries, always use the designated tools:
-    - **Services Information**: Use `get_services_list` f   or a list of services and `get_service_details` for details about a specific service.
-    - **Career Opportunities**: Use `get_jobs_list` for current positions and `get_job_details` for details about a specific job.
-    - **Contact Details**: Use `get_contact_info` for accurate communication channels.
+        For specific inquiries, always use the designated tools:
+        - **Services Information**: Use `get_services_list` for a list of services only no details. and `get_service_details` for details about a specific service.
+        - **Career Opportunities**: Use `get_jobs_list` for current positions/openings only don't add details. and `get_job_details` for details about a specific job.
+        - **Contact Details**: Use `get_contact_info` for accurate communication channels.
 
-    When faced with specialized technical questions beyond available information, offer to connect visitors with appropriate LogBinary specialists.
+        When faced with specialized technical questions beyond available information, offer to connect visitors with appropriate LogBinary specialists.
 
-    Your ultimate purpose is to deliver a seamless, informative experience that enhances LogBinary's professional reputation while efficiently addressing visitor needs.
-    """
-}
+        Your ultimate purpose is to deliver a seamless, informative experience that enhances LogBinary's professional reputation while efficiently addressing visitor needs.
+        """
+    }
 
     class CustomAgentExecutor:
         def __init__(self, llm, tools, system_message):
@@ -318,52 +324,89 @@ def create_company_agent():
             self.system_message = system_message
             self.memory = []
             self.functions = functions
+            # Add a retry mechanism for the agent
+            self.max_retries = 2
         
         async def ainvoke(self, input_data):
             user_input = input_data.get("input", "")
-            try:
-                messages = [self.system_message] + self.memory + [{"role": "user", "content": user_input}]
-                response = self.llm.invoke(messages=messages, functions=self.functions)
-                logger.debug(f"Agent raw response: {response}")
-                function_call = getattr(response, 'function_call', None)
-                tool_calls = getattr(response, 'tool_calls', None)
-                
-                if function_call:
-                    function_name = function_call.name
-                    function_args = json.loads(function_call.arguments)
-                    if function_name in self.tools:
-                        tool_response = self.tools[function_name]._run(**function_args)
-                        # Pass the tool response back to the LLM to generate a natural response
-                        messages.append({"role": "function", "name": function_name, "content": json.dumps(tool_response)})
-                        final_response = self.llm.invoke(messages=messages)
-                        output = final_response.content if hasattr(final_response, 'content') else final_response["content"]
-                        self.memory.append({"role": "user", "content": user_input})
-                        self.memory.append({"role": "assistant", "content": output})
-                        return {"output": output}
-                elif tool_calls:
-                    tool_call = tool_calls[0]
-                    function_name = tool_call.function.name
-                    function_args = json.loads(tool_call.function.arguments)
-                    if function_name in self.tools:
-                        tool_response = self.tools[function_name]._run(**function_args)
-                        # Pass the tool response back to the LLM to generate a natural response
-                        messages.append({"role": "function", "name": function_name, "content": json.dumps(tool_response)})
-                        final_response = self.llm.invoke(messages=messages)
-                        output = final_response.content if hasattr(final_response, 'content') else final_response["content"]
-                        self.memory.append({"role": "user", "content": user_input})
-                        self.memory.append({"role": "assistant", "content": output})
-                        return {"output": output}
-                
-                # Fallback to natural language response
-                output = response.content if hasattr(response, 'content') else response["content"]
-                self.memory.append({"role": "user", "content": user_input})
-                self.memory.append({"role": "assistant", "content": output})
-                if len(self.memory) > 10:
-                    self.memory = self.memory[-10:]
-                return {"output": output}
-            except Exception as e:
-                logger.error(f"Error in agent invocation: {str(e)}")
-                return {"output": "I'm sorry, I encountered an unexpected error. Please try again or contact our support team."}
+            for retry in range(self.max_retries + 1):
+                try:
+                    messages = [self.system_message] + self.memory + [{"role": "user", "content": user_input}]
+                    response = self.llm.invoke(messages=messages, functions=self.functions)
+                    logger.debug(f"Agent raw response: {response}")
+                    
+                    # Handle both older function_call and newer tool_calls patterns
+                    function_calls = []
+                    if hasattr(response, 'function_call') and response.function_call:
+                        function_calls.append({
+                            'name': response.function_call.name,
+                            'arguments': response.function_call.arguments
+                        })
+                    elif hasattr(response, 'tool_calls') and response.tool_calls:
+                        for tool_call in response.tool_calls:
+                            function_calls.append({
+                                'name': tool_call.function.name,
+                                'arguments': tool_call.function.arguments
+                            })
+                    elif isinstance(response, dict):
+                        if response.get('function_call'):
+                            function_calls.append({
+                                'name': response['function_call']['name'],
+                                'arguments': response['function_call']['arguments']
+                            })
+                        elif response.get('tool_calls'):
+                            for tool_call in response['tool_calls']:
+                                function_calls.append({
+                                    'name': tool_call['function']['name'],
+                                    'arguments': tool_call['function']['arguments']
+                                })
+                    
+                    # Process function calls if found
+                    if function_calls:
+                        tool_responses = []
+                        for fc in function_calls:
+                            function_name = fc['name']
+                            try:
+                                function_args = json.loads(fc['arguments'])
+                            except json.JSONDecodeError:
+                                logger.error(f"Failed to parse function arguments: {fc['arguments']}")
+                                function_args = {}
+                                
+                            if function_name in self.tools:
+                                tool_response = self.tools[function_name]._run(**function_args)
+                                tool_responses.append({
+                                    "role": "function", 
+                                    "name": function_name, 
+                                    "content": json.dumps(tool_response)
+                                })
+                        
+                        if tool_responses:
+                            # Pass all tool responses back to the LLM
+                            messages.extend(tool_responses)
+                            final_response = self.llm.invoke(messages=messages)
+                            output = final_response.get('content') if isinstance(final_response, dict) else getattr(final_response, 'content', "I'm having trouble processing that request.")
+                            self.memory.append({"role": "user", "content": user_input})
+                            self.memory.append({"role": "assistant", "content": output})
+                            if len(self.memory) > 10:
+                                self.memory = self.memory[-10:]
+                            return {"output": output}
+                    
+                    # Fallback to natural language response
+                    output = response.get('content') if isinstance(response, dict) else getattr(response, 'content', "I'm having trouble understanding right now.")
+                    self.memory.append({"role": "user", "content": user_input})
+                    self.memory.append({"role": "assistant", "content": output})
+                    if len(self.memory) > 10:
+                        self.memory = self.memory[-10:]
+                    return {"output": output}
+                    
+                except Exception as e:
+                    logger.error(f"Error in agent invocation (attempt {retry+1}/{self.max_retries+1}): {str(e)}")
+                    if retry < self.max_retries:
+                        logger.info(f"Retrying agent invocation...")
+                        await asyncio.sleep(1)  # Add a small delay before retrying
+                    else:
+                        return {"output": "I'm sorry, I encountered an unexpected error. Please try again or contact our support team."}
+
     return CustomAgentExecutor(llm, tools, system_message)
 
 class CompanyAIChatbot:
@@ -371,6 +414,56 @@ class CompanyAIChatbot:
         try:
             self.agent = create_company_agent()
             self.context = {"last_topic": None}
+            self.chat_styles = """
+            <style>
+            .section-header {
+                font-weight: 600;
+                color: #0972d3;
+                margin-top: 12px;
+                margin-bottom: 6px;
+            }
+            .highlight {
+                color: #0972d3;
+                font-weight: 600;
+            }
+            .styled-list {
+                list-style-type: none;
+                padding-left: 12px;
+                margin: 8px 0;
+            }
+            .bullet-item {
+                position: relative;
+                padding-left: 20px;
+                margin-bottom: 8px;
+                line-height: 1.4;
+            }
+            .bullet-item:before {
+                content: "•";
+                color: #0972d3;
+                font-weight: bold;
+                position: absolute;
+                left: 0;
+            }
+            .key-offering {
+                font-weight: 600;
+                color: #232f3e;
+                margin-top: 10px;
+                margin-bottom: 4px;
+            }
+            .contact-label {
+                font-weight: 600;
+                color: #0972d3;
+            }
+            .paragraph-break {
+                height: 12px;
+            }
+            .prompt-question {
+                margin-top: 16px;
+                font-style: italic;
+                color: #545b64;
+            }
+            </style>
+            """
             logger.info("CompanyAIChatbot initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize CompanyAIChatbot: {str(e)}")
@@ -382,14 +475,26 @@ class CompanyAIChatbot:
             if not user_message:
                 return "Hello! How can I assist you today with LogBinary's services, job openings, or contact info?"
 
-            # Fallback to agent for all messages, letting it decide which tool to use
             response = await self.agent.ainvoke({"input": user_message})
-            return response["output"]
+            output = response["output"]
+        
+            output = self.clean_markdown(output)
+            
+            if "I'm LogBinary's virtual assistant" in output:
+                output = self.chat_styles + output
+            
+            return output
+        
         except Exception as e:
             logger.error(f"Error processing message: {e}")
             return "Oops, something went wrong! How about asking me about our services, jobs, or contact info?"
 
-# FastAPI App
+    def clean_markdown(self, text):
+        # Simple cleaning - you might want a more sophisticated approach
+        text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)  # Remove bold markers
+        text = re.sub(r'\*(.*?)\*', r'\1', text)      # Remove italic markers
+        return text
+
 app = FastAPI(title="LogBinary AI Chatbot")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -416,19 +521,21 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     try:
         chatbot = CompanyAIChatbot()
-        welcome_message = "Hi there! 👋 I'm LogBinary's virtual assistant. How can I help you today?"
+        welcome_message = f"""
+        {chatbot.chat_styles}
+        <div class="welcome-message">
+            Hi there! 👋 <strong class="highlight">I'm LogBinary's virtual assistant</strong>. How can I help you today?
+        </div>
+        """
         await websocket.send_text(welcome_message)
         while True:
             data = await websocket.receive_text()
             logger.info(f"Received message: {data}")
             
-            # Send typing indicator
             await websocket.send_text("Typing...")
             
-            # Process message if not in cache
             response = await chatbot.process_message(data)
             
-            # Small delay to simulate typing
             await asyncio.sleep(0.5)
             
             logger.info(f"Sending response: {response[:100]}...")
@@ -443,7 +550,6 @@ async def websocket_endpoint(websocket: WebSocket):
         except:
             logger.error("Failed to send error message")
 
-# Helper function to create a simple HTML file for testing
 def create_test_html():
     html = """
     <!DOCTYPE html>
@@ -460,7 +566,7 @@ def create_test_html():
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         }
         body {
-            background-color: #f9fafb;
+            background-color: #f8f9fa;
             height: 100vh;
             display: flex;
             justify-content: center;
@@ -470,173 +576,207 @@ def create_test_html():
             width: 400px;
             height: 650px;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            border: 1px solid #d9d9d9;
         }
         .chat-header {
-            background-color: #4f46e5;
-            padding: 16px 20px;
-            color: white;
+            background-color: #ffffff;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #d9d9d9;
+        }
+        .header-left {
             display: flex;
             align-items: center;
         }
-        .assistant-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #4f46e5, #a855f7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-right: 12px;
-        }
-        .assistant-avatar svg {
-            width: 20px;
-            height: 20px;
-            color: white;
-        }
-        .header-text {
-            flex-grow: 1;
-        }
-        .header-text h1 {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: center;
-        }
-        .status-badge {
-            margin-left: 8px;
-            background-color: rgba(255, 255, 255, 0.2);
-            color: white;
-            font-size: 11px;
-            padding: 2px 8px;
+        .built-in-badge {
+            background-color: #f2f3f3;
+            border: 1px solid #d9d9d9;
             border-radius: 12px;
-            font-weight: 500;
+            padding: 2px 8px;
+            font-size: 12px;
+            margin-left: 8px;
+            color: #232f3e;
         }
-        .header-text p {
-            font-size: 13px;
-            opacity: 0.9;
+        .header-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #232f3e;
+            display: flex;
+            align-items: center;
         }
-        .close-button {
+        .header-controls {
+            display: flex;
+            gap: 8px;
+        }
+        .control-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: #545b64;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             width: 24px;
             height: 24px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
         }
-        .close-button span {
-            color: white;
-            font-size: 14px;
-            line-height: 1;
+        .status-message {
+            padding: 8px 16px;
+            background-color: #f8f8f8;
+            border-bottom: 1px solid #d9d9d9;
+            font-size: 12px;
+            color: #545b64;
+            display: flex;
+            align-items: center;
+        }
+        .status-icon {
+            width: 8px;
+            height: 8px;
+            background-color: #2cbb5d;
+            border-radius: 50%;
+            margin-right: 6px;
         }
         .conversation {
             flex-grow: 1;
             overflow-y: auto;
-            padding: 20px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
             gap: 16px;
+            background-color: #ffffff;
         }
         .message {
             display: flex;
-            align-items: flex-start;
-            max-width: 85%;
+            max-width: 100%;
         }
         .user-message {
             justify-content: flex-end;
-            margin-left: auto;
         }
         .bot-message {
             justify-content: flex-start;
         }
-        .message-bubble {
-            padding: 12px 16px;
-            border-radius: 18px;
-            font-size: 14px;
-            line-height: 1.5;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-        .user-message .message-bubble {
-            background-color: #4f46e5;
-            color: white;
-            border-bottom-right-radius: 4px;
-        }
-        .bot-message .message-bubble {
-            background-color: #f3f4f6;
-            color: #374151;
-            border-bottom-left-radius: 4px;
-        }
-        .bot-avatar {
+        .avatar {
             width: 32px;
             height: 32px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #4f46e5, #a855f7);
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-right: 8px;
+            margin-right: 12px;
             flex-shrink: 0;
         }
+
+        .bot-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: #7558F7;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-shrink: 0;
+        }   
         .bot-avatar svg {
             width: 16px;
             height: 16px;
             color: white;
         }
         .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: #e5e7eb;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-left: 8px;
-            flex-shrink: 0;
+            background-color: #e9ebed;
         }
-        .user-avatar svg {
-            width: 16px;
-            height: 16px;
-            color: #6b7280;
+        .message-content {
+            max-width: calc(100% - 44px);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .message-bubble {
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #232f3e;
+            width: auto;
+            display: inline-block;
+        }
+        .user-message .message-bubble {
+            background-color: #f2f3f3;
+        }
+        .bot-message .message-bubble {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ebed;
+        }
+        .suggestion-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .suggestion-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+            align-items: flex-start;
+        }
+        .suggestion-button {
+            background-color: #e6e6fa;
+            border: none;
+            color: #161d26;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 14px;
+            line-height: 1.5;
+            text-align: left;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            width: auto;
+            display: inline-block;
+        }
+        .suggestion-button:hover {
+            background-color: #dadaf8;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
         }
         .input-container {
-            padding: 16px;
-            border-top: 1px solid #e5e7eb;
+            padding: 6px;
+            background-color: white;
+            border-top: 1px solid #d9d9d9;
         }
         .input-wrapper {
             display: flex;
             align-items: center;
-            background-color: #f3f4f6;
-            border-radius: 24px;
-            padding: 8px 16px;
+            background-color: white;
+            border: 1px solid #d9d9d9;
+            border-radius: 9px;
+            padding: 4px 12px;
             transition: all 0.2s ease;
         }
         .input-wrapper:focus-within {
-            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.3);
-            background-color: white;
+            box-shadow: 0 0 0 2px rgba(9, 114, 211, 0.3);
+            border-color: #0972d3;
         }
         #message-input {
             flex-grow: 1;
             border: none;
             outline: none;
             background: transparent;
-            padding: 8px 0;
-            font-size: 14px;
-            color: #374151;
+            padding: 4px 10px;
+            font-size: 15px;
+            color: #232f3e;
         }
         #message-input::placeholder {
-            color: #9ca3af;
+            color: #687078;
         }
         #send-button {
-            width: 36px;
-            height: 36px;
-            background-color: #4f46e5;
+            width: 32px;
+            height: 32px;
+            background-color: #7558F7;
             border-radius: 50%;
             border: none;
             display: flex;
@@ -645,260 +785,292 @@ def create_test_html():
             cursor: pointer;
             transition: all 0.2s ease;
         }
-        #send-button:hover {
-            background-color: #4338ca;
+        #send-button:disabled {
+            background-color: #e9ebed;
+            cursor: not-allowed;
         }
         .footer {
             padding: 12px 16px;
             text-align: center;
             font-size: 12px;
-            color: #6b7280;
-            border-top: 1px solid #f3f4f6;
+            color: #687078;
         }
         .footer a {
-            color: #4f46e5;
+            color: #0972d3;
             text-decoration: none;
         }
         .footer a:hover {
             text-decoration: underline;
         }
-        
-        /* Updated styles for preset questions */
-        .preset-questions-container {
-            margin-top: 12px;
-            position: sticky;
-            bottom: 0;
-            background: white;
-            padding: 12px 16px;
-            border-top: 1px solid #e5e7eb;
+        .arrow-icon {
+            color: white;
         }
-        .preset-questions {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .preset-question-button {
-            background-color: #f0f7ff;
-            border: 1px solid #dbeafe;
-            color: #4f46e5;
-            border-radius: 20px;
-            padding: 10px 16px;
-            font-size: 14px;
-            font-weight: 500;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-        .preset-question-button:hover {
-            background-color: #e0f2fe;
-            border-color: #bfdbfe;
-            transform: translateY(-1px);
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
-        }
-        .preset-question-button:active {
-            transform: translateY(0);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        @media (max-width: 480px) {
+            .chat-widget {
+                width: 95%;
+                height: 90vh;
+                border-radius: 4px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="chat-widget">
         <div class="chat-header">
-            <div class="assistant-avatar">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
+            <div class="header-left">
+                <span class="header-title">Ask LogBinary</span>
+                <span class="built-in-badge">built-in</span>
             </div>
-            <div class="header-text">
-                <h1>Ask XYZ <span class="status-badge">online</span></h1>
+            <div class="header-controls">
+                <button class="control-button">−</button>
+                <button class="control-button">×</button>
             </div>
-            <div class="close-button">
-                <span>✕</span>
-            </div>
+        </div>
+        
+        <div class="status-message">
+            <span class="status-icon"></span>
+            Our sales reps are online
         </div>
         
         <div id="chat-box" class="conversation"></div>
         
         <div class="input-container">
             <div class="input-wrapper">
-                <input type="text" id="message-input" placeholder="Ask about services, jobs, or contact...">
+                <input type="text" id="message-input" placeholder="Ask a question">
                 <button id="send-button">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16">
-                        <path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083l6-15Zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471-.47 1.178Z"/>
+                    <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                     </svg>
                 </button>
             </div>
         </div>
         
         <div class="footer">
-            By using this assistant, you agree to our <a href="#">Terms & Privacy</a>
+            By chatting, you agree to this <a href="#">disclaimer</a>.
         </div>
     </div>
 
     <script>
-    const chatBox = document.getElementById('chat-box');
-    const messageInput = document.getElementById('message-input');
-    const sendButton = document.getElementById('send-button');
+const chatBox = document.getElementById('chat-box');
+const messageInput = document.getElementById('message-input');
+const sendButton = document.getElementById('send-button');
+
+const socket = new WebSocket('ws://' + window.location.host + '/ws');
+let hasShownSuggestions = false;
+let lastBotMessage = null;
+
+socket.onopen = function(e) {
+    console.log('WebSocket connection established');
+};
+
+socket.onmessage = function(event) {
+    console.log("Received message:", event.data);
     
-    // Connect to WebSocket
-    const socket = new WebSocket('ws://' + window.location.host + '/ws');
-    let isFirstMessage = true;
-    
-    socket.onopen = function(e) {
-        console.log('WebSocket connection established');
-    };
-    
-    socket.onmessage = function(event) {
-        console.log("Received message:", event.data);
-        
-        // If this is the first message (welcome message), add preset questions after it
-        if (isFirstMessage && event.data !== "Typing...") {
+    if (event.data !== "Typing...") {
+        if (event.data !== lastBotMessage) {
             addBotMessage(event.data);
-            addPresetQuestions();
-            isFirstMessage = false;
-        } else if (event.data !== "Typing...") {
-            addBotMessage(event.data);
-        }
-    };
-    
-    socket.onclose = function(event) {
-        if (event.wasClean) {
-            console.log(`Connection closed cleanly, code=${event.code} reason=${event.reason}`);
-        } else {
-            console.error('Connection died');
-        }
-    };
-    
-    socket.onerror = function(error) {
-        console.error(`WebSocket error: ${error.message}`);
-    };
-    
-    // Send message when button is clicked
-    sendButton.addEventListener('click', sendMessage);
-    
-    // Send message when Enter key is pressed
-    messageInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            sendMessage();
-        }
-    });
-    
-    function sendMessage() {
-        const message = messageInput.value.trim();
-        if (message) {
-            // Add user message to chat
-            addUserMessage(message);
-            
-            // Send message to server
-            socket.send(message);
-            
-            // Clear input field
-            messageInput.value = '';
-            
-            // Show typing indicator
-            showTypingIndicator();
-            
-            // Remove preset questions container if it exists
-            const presetContainer = document.getElementById('preset-questions-container');
-            if (presetContainer) {
-                presetContainer.remove();
-            }
         }
     }
-    
-    function addUserMessage(message) {
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('message', 'user-message');
+};
+
+socket.onclose = function(event) {
+    if (event.wasClean) {
+        console.log(`Connection closed cleanly, code=${event.code} reason=${event.reason}`);
+    } else {
+        console.error('Connection died');
+    }
+};
+
+socket.onerror = function(error) {
+    console.error(`WebSocket error: ${error.message}`);
+};
+
+sendButton.addEventListener('click', sendMessage);
+
+messageInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        sendMessage();
+    }
+});
+
+function sendMessage() {
+    const message = messageInput.value.trim();
+    if (message) {
+        addUserMessage(message);
+        socket.send(message);
+        messageInput.value = '';
+        showTypingIndicator();
         
-        messageElement.innerHTML = `
+        const suggestionContainer = document.getElementById('suggestion-container');
+        if (suggestionContainer) {
+            suggestionContainer.remove();
+        }
+    }
+}
+
+function addUserMessage(message) {
+    const messageElement = document.createElement('div');
+    messageElement.classList.add('message', 'user-message');
+    
+    messageElement.innerHTML = `
+        <div class="message-content">
             <div class="message-bubble">${message}</div>
-            <div class="user-avatar">
+        </div>
+    `;
+    
+    chatBox.appendChild(messageElement);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function addBotMessage(message) {
+    const typingIndicator = document.getElementById('typing-indicator');
+    if (typingIndicator) typingIndicator.remove();
+    
+    if (message !== "Typing...") {
+        lastBotMessage = message;
+
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', 'bot-message');
+        
+        let messageContent = `
+            <div class="avatar bot-avatar">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                        </svg>
             </div>
+            <div class="message-content">
+                <div class="message-bubble">
+                    ${message}
+                </div>
         `;
+        
+        if (!hasShownSuggestions) {
+            messageContent += `
+                <div class="suggestion-container" id="suggestion-container">
+                    <div class="suggestion-buttons">
+                        <button class="suggestion-button" data-question="I want to learn about LogBinary's services">I want to learn about LogBinary's services</button>
+                        <button class="suggestion-button" data-question="I want to know about Job openings">I want to know about Job openings</button>
+                        <button class="suggestion-button" data-question="I need Contact Information">I need Contact Information</button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        messageContent += `</div>`;
+        messageElement.innerHTML = messageContent;
         
         chatBox.appendChild(messageElement);
         chatBox.scrollTop = chatBox.scrollHeight;
-    }
-    
-    function addBotMessage(message) {
-        // Remove typing indicator if it exists
-        const typingIndicator = document.getElementById('typing-indicator');
-        if (typingIndicator) typingIndicator.remove();
         
-        if (message !== "Typing...") {
-            const messageElement = document.createElement('div');
-            messageElement.classList.add('message', 'bot-message');
-            
-            messageElement.innerHTML = `
-                <div class="bot-avatar">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                    </svg>
-                </div>
-                <div class="message-bubble">${message}</div>
-            `;
-            
-            chatBox.appendChild(messageElement);
-            chatBox.scrollTop = chatBox.scrollHeight;
+        if (!hasShownSuggestions) {
+            const suggestionButtons = messageElement.querySelectorAll('.suggestion-button');
+            suggestionButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const question = this.getAttribute('data-question');
+                    addUserMessage(question);
+                    socket.send(question);
+                    showTypingIndicator();
+                    
+                    const suggestionContainer = document.getElementById('suggestion-container');
+                    if (suggestionContainer) {
+                        suggestionContainer.remove();
+                    }
+                });
+            });
+            hasShownSuggestions = true;
         }
     }
-    
-    function showTypingIndicator() {
-        const typingElement = document.createElement('div');
-        typingElement.classList.add('message', 'bot-message');
-        typingElement.id = 'typing-indicator';
+}
+
+function addGlobalStyles() {
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+        .message-bubble {
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #232f3e;
+            width: auto;
+            display: inline-block;
+            max-width: 100%;
+        }
         
-        typingElement.innerHTML = `
-            <div class="bot-avatar">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        .bot-message .message-bubble {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ebed;
+        }
+        
+        .welcome-message {
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        
+        .message-bubble ul, 
+        .message-bubble ol {
+            padding-left: 20px;
+            margin: 8px 0;
+        }
+        
+        .message-bubble li {
+            margin-bottom: 6px;
+        }
+        
+        .service-card {
+            border: 1px solid #e9ebed;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            background-color: #f8f9fa;
+        }
+        
+        .service-title {
+            font-weight: 600;
+            color: #0972d3;
+            margin-bottom: 6px;
+        }
+        
+        .service-description {
+            font-size: 13px;
+            color: #232f3e;
+        }
+        
+        .job-listing {
+            border-left: 3px solid #0972d3;
+            padding-left: 12px;
+            margin: 12px 0;
+        }
+        
+        .job-title {
+            font-weight: 600;
+            color: #232f3e;
+        }
+    `;
+    document.head.appendChild(styleElement);
+}
+
+window.addEventListener('DOMContentLoaded', addGlobalStyles);
+
+function showTypingIndicator() {
+    const typingElement = document.createElement('div');
+    typingElement.classList.add('message', 'bot-message');
+    typingElement.id = 'typing-indicator';
+    
+    typingElement.innerHTML = `
+        <div class="avatar bot-avatar">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                 </svg>
-            </div>
+        </div>
+        <div class="message-content">
             <div class="message-bubble">Typing...</div>
-        `;
-        
-        chatBox.appendChild(typingElement);
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
+        </div>
+    `;
     
-    function addPresetQuestions() {
-        // Create preset questions container without the bot avatar
-        const presetContainer = document.createElement('div');
-        presetContainer.id = 'preset-questions-container';
-        presetContainer.classList.add('preset-questions-container');
-        
-        presetContainer.innerHTML = `
-            <div class="preset-questions">
-                <button class="preset-question-button" data-question="I want to learn about LogBinary's services">I want to learn about LogBinary's services</button>
-                <button class="preset-question-button" data-question="I want to know about job openings">I want to know about job openings</button>
-                <button class="preset-question-button" data-question="I need contact details">I need contact details</button>
-            </div>
-        `;
-        
-        chatBox.appendChild(presetContainer);
-        chatBox.scrollTop = chatBox.scrollHeight;
-        
-        // Add event listeners to preset question buttons
-        const presetButtons = presetContainer.querySelectorAll('.preset-question-button');
-        presetButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const question = this.getAttribute('data-question');
-                addUserMessage(question);
-                socket.send(question);
-                showTypingIndicator();
-                
-                // Remove the preset questions container after a button is clicked
-                const presetContainer = document.getElementById('preset-questions-container');
-                if (presetContainer) {
-                    presetContainer.remove();
-                }
-            });
-        });
-    }
+    chatBox.appendChild(typingElement);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
 </script>
 </body>
 </html>
@@ -910,4 +1082,4 @@ def create_test_html():
 create_test_html()
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0",port=6440)
+    uvicorn.run(app, host="0.0.0.0", port=6440)
