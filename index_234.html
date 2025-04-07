@@ -119,17 +119,16 @@
             margin-right: 12px;
             flex-shrink: 0;
         }
-
         .bot-avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background-color: #7558F7;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-shrink: 0;
-        }   
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #7558F7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+        }
         .bot-avatar svg {
             width: 16px;
             height: 16px;
@@ -298,12 +297,13 @@
         </div>
     </div>
 
-    <script>
+   <script>
 const chatBox = document.getElementById('chat-box');
 const messageInput = document.getElementById('message-input');
 const sendButton = document.getElementById('send-button');
 
 const socket = new WebSocket('ws://' + window.location.host + '/ws');
+window.socket = socket; // Make socket globally accessible
 let hasShownSuggestions = false;
 let lastBotMessage = null;
 
@@ -314,10 +314,14 @@ socket.onopen = function(e) {
 socket.onmessage = function(event) {
     console.log("Received message:", event.data);
     
-    if (event.data !== "Typing...") {
-        if (event.data !== lastBotMessage) {
-            addBotMessage(event.data);
-        }
+    const typingIndicator = document.getElementById('typing-indicator');
+    if (typingIndicator) typingIndicator.remove(); // Clear typing indicator on new message
+    
+    if (event.data !== "Typing..." && event.data !== lastBotMessage) {
+        lastBotMessage = event.data;
+        addBotMessage(event.data);
+        // Ensure input is focused after response
+        messageInput.focus();
     }
 };
 
@@ -383,8 +387,8 @@ function addBotMessage(message) {
         let messageContent = `
             <div class="avatar bot-avatar">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                        </svg>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
             </div>
             <div class="message-content">
                 <div class="message-bubble">
@@ -396,7 +400,7 @@ function addBotMessage(message) {
             messageContent += `
                 <div class="suggestion-container" id="suggestion-container">
                     <div class="suggestion-buttons">
-                        <button class="suggestion-button" data-question="I want to learn about LogBinary's services">I want to learn about LogBinary's services</button>
+                        <button class="suggestion-button" data-question="I am interested in your services">I am interested in your services</button>
                         <button class="suggestion-button" data-question="I want to know about Job openings">I want to know about Job openings</button>
                         <button class="suggestion-button" data-question="I need Contact Information">I need Contact Information</button>
                     </div>
@@ -426,6 +430,30 @@ function addBotMessage(message) {
                 });
             });
             hasShownSuggestions = true;
+        }
+
+        // Handle inquiry form submission
+        const inquiryForm = messageElement.querySelector('#inquiryForm');
+        if (inquiryForm) {
+            inquiryForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                console.log('Form submission triggered');
+                if (!socket || socket.readyState !== WebSocket.OPEN) {
+                    console.error('WebSocket is not open');
+                    return;
+                }
+                const formData = new FormData(this);
+                const data = Object.fromEntries(formData);
+                data.service_id = this.dataset.serviceId;
+                const fullName = `${data.first_name} ${data.last_name}`;
+                await socket.send(JSON.stringify({ action: 'submit_inquiry', data: { ...data, name: fullName } }));
+                // Replace the form with the thank you message
+                const parentMessage = this.closest('.message');
+                if (parentMessage && !parentMessage.querySelector('.message-bubble').innerHTML.includes('Thank you!')) {
+                    parentMessage.querySelector('.message-bubble').innerHTML = 'Thank you! Your record has been submitted. Is there anything else we can help you with?';
+                }
+                return false;
+            });
         }
     }
 }
@@ -493,6 +521,14 @@ function addGlobalStyles() {
             font-weight: 600;
             color: #232f3e;
         }
+        
+        .inquiry-form {
+            border: 1px solid #e9ebed;
+            border-radius: 8px;
+            padding: 16px;
+            background-color: #f8f9fa;
+            margin: 12px 0;
+        }
     `;
     document.head.appendChild(styleElement);
 }
@@ -507,8 +543,8 @@ function showTypingIndicator() {
     typingElement.innerHTML = `
         <div class="avatar bot-avatar">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
         </div>
         <div class="message-content">
             <div class="message-bubble">Typing...</div>

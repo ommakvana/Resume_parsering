@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from groq import Groq
 import csv
 import re
+from datetime import datetime
 
 # Set up logging
 logging.basicConfig(
@@ -137,18 +138,37 @@ class GetJobDetailsTool(BaseTool):
 
 class SubmitServiceInquiryTool(BaseTool):
     name = "submit_service_inquiry"
-    description = "Submit a service inquiry from a potential customer and return confirmation data."
-    args_schema = ServiceInquiry
-    def _run(self, name: str, email: str, service_id: str, project_details: str) -> Dict:
-        service = next((s for s in COMPANY_CONFIG["services"] if s["id"] == service_id), None)
-        if not service:
-            return {"error": f"Service with ID {service_id} not found."}
-        logger.info(f"Service inquiry submitted: {name}, {email}, {service['name']}, {project_details}")
+    description = "Submit a general inquiry from a potential customer and save to CSV."
+    # Update args_schema if validation is needed (optional)
+    # args_schema = ServiceInquiry  # You can redefine this model or remove it if not needed
+
+    def _run(self, name: str, email: str, phone: str, subject: str, message: str) -> Dict:
+        # No service lookup needed since it's a general inquiry
+        # Save to CSV
+        csv_file = "service_inquiries.csv"
+        fieldnames = ["name", "email", "phone", "subject", "message", "timestamp"]
+        inquiry_data = {
+            "name": name,
+            "email": email,
+            "phone": phone,
+            "subject": subject,
+            "message": message,
+            "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+        
+        file_exists = os.path.exists(csv_file)
+        with open(csv_file, mode='a', newline='', encoding='utf-8') as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            if not file_exists:
+                writer.writeheader()
+            writer.writerow(inquiry_data)
+        
+        logger.info(f"General inquiry submitted and saved: {name}, {email}, {subject}, {message}")
         return {
             "status": "success",
             "name": name,
             "email": email,
-            "service_name": service["name"]
+            "subject": subject
         }
 
 class SubmitJobApplicationTool(BaseTool):
@@ -289,7 +309,7 @@ def create_company_agent():
 
         ## Core Responsibilities
 
-        - **Information Accuracy**: Always utilize designated data retrieval tools to fetch current and correct information.
+        - **Information Accuracy**: Always utilize designated data retrieval tools to fetch current and correct information when required, except for company info which is provided below.
         - **Professional Representation**: Embody LogBinary's values of expertise, reliability, and client-centered service in every interaction.
         - **Efficient Assistance**: Deliver clear, concise responses that address visitor inquiries with precision.
 
@@ -297,25 +317,48 @@ def create_company_agent():
 
         When engaging with visitors, please:
 
-        - Welcome new users with a brief, professional greeting that establishes a positive first impression. Avoid followup with the services details. avoid listing services unless explicitly asked.
+        - Welcome new users with a brief, professional greeting that establishes a positive first impression. Avoid followup with the services details. Avoid listing services unless explicitly asked.
         - Maintain a warm yet professional tone that balances approachability with expertise.
         - Focus responses on precisely addressing the query without unnecessary elaboration.
         - Always fetch fresh information using tools when asked about services, jobs, or contact details, even if similar questions were asked before.
         - Acknowledge when information falls outside your available resources rather than providing uncertain answers.
-        - When a tool returns data (e.g., a list of services or jobs), craft a natural, conversational response using that data.
+        - When a visitor expresses interest in services (e.g., says 'interested in ' or similar), immediately generate an HTML form to collect their details using the `submit_service_inquiry` tool, even if no specific service is mentioned. Use the first service from `get_services_list` as the default `service_id` if none is specified.
+
+        ## Company Information
+
+        When a user asks about "logbinary," "the company," "LB," or phrases like "tell me about LogBinary" or "what is LogBinary,"(it is not case sensitive) respond with the following exact text:
+
+        "We are a comprehensive IT solutions provider dedicated to transforming business ideas into reality through cutting-edge software technologies. With 15 years of proven industry expertise, we have a deep understanding of what businesses need to thrive in a competitive landscape. Our commitment lies in delivering high-quality websites and mobile applications that empower our clients to achieve operational excellence and drive profitability."
+
+        Do not use tools for this response unless the user asks for additional details beyond this description.
 
         ## Information Retrieval Protocols
 
-        For specific inquiries, always use the designated tools:
-        - **Services Information**: Use `get_services_list` for a list of services only no details. and `get_service_details` for details about a specific service.
-        - **Career Opportunities**: Use `get_jobs_list` for current positions/openings only don't add details. and `get_job_details` for details about a specific job.
+        For specific inquiries beyond company info, always use the designated tools:
+        - **Services Information**: Use `get_services_list` for a list of services only no details, and `get_service_details` for details about a specific service.
+        - **Career Opportunities**: Use `get_jobs_list` for current positions/openings only don’t add details, and `get_job_details` for details about a specific job.
         - **Contact Details**: Use `get_contact_info` for accurate communication channels.
+    
+        ## Service Inquiry Submission Protocol
+    
+        - When a visitor expresses interest in a specific service, generate an HTML form with fields for:
+          - First name
+          - Last name
+          - Phone number
+          - Business email
+          - Job role
+          - Country/Region
+          - Project details
+        - If no specific service is mentioned, use the first service from `get_services_list` as the default `service_id`.
+        - Include a submit button to send the form data back via WebSocket.
+        - Upon submission, use the `submit_service_inquiry` tool to save the data to a CSV file.
 
         When faced with specialized technical questions beyond available information, offer to connect visitors with appropriate LogBinary specialists.
 
         Your ultimate purpose is to deliver a seamless, informative experience that enhances LogBinary's professional reputation while efficiently addressing visitor needs.
         """
     }
+    
 
     class CustomAgentExecutor:
         def __init__(self, llm, tools, system_message):
@@ -324,7 +367,6 @@ def create_company_agent():
             self.system_message = system_message
             self.memory = []
             self.functions = functions
-            # Add a retry mechanism for the agent
             self.max_retries = 2
         
         async def ainvoke(self, input_data):
@@ -335,7 +377,6 @@ def create_company_agent():
                     response = self.llm.invoke(messages=messages, functions=self.functions)
                     logger.debug(f"Agent raw response: {response}")
                     
-                    # Handle both older function_call and newer tool_calls patterns
                     function_calls = []
                     if hasattr(response, 'function_call') and response.function_call:
                         function_calls.append({
@@ -361,7 +402,6 @@ def create_company_agent():
                                     'arguments': tool_call['function']['arguments']
                                 })
                     
-                    # Process function calls if found
                     if function_calls:
                         tool_responses = []
                         for fc in function_calls:
@@ -381,7 +421,6 @@ def create_company_agent():
                                 })
                         
                         if tool_responses:
-                            # Pass all tool responses back to the LLM
                             messages.extend(tool_responses)
                             final_response = self.llm.invoke(messages=messages)
                             output = final_response.get('content') if isinstance(final_response, dict) else getattr(final_response, 'content', "I'm having trouble processing that request.")
@@ -391,7 +430,6 @@ def create_company_agent():
                                 self.memory = self.memory[-10:]
                             return {"output": output}
                     
-                    # Fallback to natural language response
                     output = response.get('content') if isinstance(response, dict) else getattr(response, 'content', "I'm having trouble understanding right now.")
                     self.memory.append({"role": "user", "content": user_input})
                     self.memory.append({"role": "assistant", "content": output})
@@ -403,7 +441,7 @@ def create_company_agent():
                     logger.error(f"Error in agent invocation (attempt {retry+1}/{self.max_retries+1}): {str(e)}")
                     if retry < self.max_retries:
                         logger.info(f"Retrying agent invocation...")
-                        await asyncio.sleep(1)  # Add a small delay before retrying
+                        await asyncio.sleep(1)
                     else:
                         return {"output": "I'm sorry, I encountered an unexpected error. Please try again or contact our support team."}
 
@@ -462,6 +500,39 @@ class CompanyAIChatbot:
                 font-style: italic;
                 color: #545b64;
             }
+            .inquiry-form {
+                border: 1px solid #e9ebed;
+                border-radius: 8px;
+                padding: 16px;
+                background-color: #f8f9fa;
+                margin: 12px 0;
+            }
+            .form-group {
+                margin-bottom: 12px;
+            }
+            .form-group label {
+                font-weight: 600;
+                color: #232f3e;
+                display: block;
+                margin-bottom: 4px;
+            }
+            .form-group input, .form-group select, .form-group textarea {
+                width: 100%;
+                padding: 8px;
+                border: 1px solid #d9d9d9;
+                border-radius: 4px;
+                box-sizing: border-box;
+            }
+            .form-group input[type="submit"] {
+                background-color: #0972d3;
+                color: white;
+                border: none;
+                cursor: pointer;
+                padding: 10px 20px;
+            }
+            .form-group input[type="submit"]:hover {
+                background-color: #075aad;
+            }
             </style>
             """
             logger.info("CompanyAIChatbot initialized successfully")
@@ -471,13 +542,85 @@ class CompanyAIChatbot:
 
     async def process_message(self, user_message: str) -> str:
         try:
-            user_message = user_message.strip().lower()
+            user_message = user_message.strip()
+            
             if not user_message:
-                return "Hello! How can I assist you today with LogBinary's services, job openings, or contact info?"
+                return f"""
+                {self.chat_styles}
+                <div class="welcome-message">
+                    Hi there! 👋 <strong class="highlight">I'm LogBinary's virtual assistant</strong>. How can I help you today?
+                </div>
+                """
+
+            # Check for service inquiry intent
+            if "interested in" in user_message.lower() and any(s in user_message.lower() for s in ["service", "help", "offering"]):
+                services_tool = next((t for t in self.agent.tools.values() if t.name == "get_services_list"), None)
+                if services_tool:
+                    services = services_tool._run()
+                    service_id = None
+                    service_name = None
+                    for service in services:
+                        if service["name"].lower() in user_message.lower() or (service.get("id") and service.get("id").lower() in user_message.lower()):
+                            service_id = service["id"]
+                            service_name = service["name"]
+                            break
+                    
+                    # Default to first service if none specified
+                    if not service_id and services:
+                        service_id = services[0]["id"]
+                        service_name = services[0]["name"]
+                    
+                    if service_id:
+                        form_html = f"""
+                        {self.chat_styles}
+                        <div class="inquiry-form">
+                            <p>Please input your business details. We are here for Perfect Solutions For Your Business!</p>
+                            <form id="inquiryForm" data-service-id="{service_id}">
+                                <div class="form-group">
+                                    <label for="your">Your name</label>
+                                    <input type="text" id="Your" name="Your_name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="phone">Phone number</label>
+                                    <input type="tel" id="phone" name="phone" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="email">Business email</label>
+                                    <input type="email" id="email" name="email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="job_role">Subject</label>
+                                    <input type="text" id="Subject" name="Subject" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="project_details">Message</label>
+                                    <textarea id="Message" name="Message" rows="4" required></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <input type="submit" value="Submit">
+                                </div>
+                            </form>
+                            <p>By submitting, you acknowledge LogBinary collects and handles your information as described in our <a href="#">Privacy Notice</a>.</p>
+                        </div>
+                        <script>
+                        document.getElementById('inquiryForm').addEventListener('submit', async function(e) {{
+                            e.preventDefault(); // Prevent default form submission
+                            console.log('Form submission triggered');
+                            const formData = new FormData(this);
+                            const data = Object.fromEntries(formData);
+                            data.service_id = this.dataset.serviceId;
+                            const fullName = `${{data.first_name}} ${{data.last_name}}`;
+                            await socket.send(JSON.stringify({{ action: 'submit_inquiry', data: {{ ...data, name: fullName }} }}));
+                            this.reset();
+                            console.log('Form data sent:', {{ action: 'submit_inquiry', data: {{ ...data, name: fullName }} }});
+                            return false;
+                        }});
+                        </script>
+                        """
+                        return form_html
 
             response = await self.agent.ainvoke({"input": user_message})
             output = response["output"]
-        
             output = self.clean_markdown(output)
             
             if "I'm LogBinary's virtual assistant" in output:
@@ -488,11 +631,10 @@ class CompanyAIChatbot:
         except Exception as e:
             logger.error(f"Error processing message: {e}")
             return "Oops, something went wrong! How about asking me about our services, jobs, or contact info?"
-
+    
     def clean_markdown(self, text):
-        # Simple cleaning - you might want a more sophisticated approach
-        text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)  # Remove bold markers
-        text = re.sub(r'\*(.*?)\*', r'\1', text)      # Remove italic markers
+        text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
+        text = re.sub(r'\*(.*?)\*', r'\1', text)
         return text
 
 app = FastAPI(title="LogBinary AI Chatbot")
@@ -513,8 +655,8 @@ async def health_check():
         llm = get_llm_provider()
         return {"status": "healthy", "llm_provider": llm.__class__.__name__, "model": llm.model}
     except Exception as e:
-        logger.error(f"Health check failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Service unhealthy: {str(e)}")
+        logger.error(f"Health check failed: {e}")        
+        raise HTTPException(status_code=500, detail=f"Service unhealthy: {e}")
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -534,10 +676,25 @@ async def websocket_endpoint(websocket: WebSocket):
             
             await websocket.send_text("Typing...")
             
+            if data.startswith('{') and data.endswith('}'):
+                try:
+                    message_data = json.loads(data)
+                    if message_data.get("action") == "submit_inquiry":
+                        inquiry_data = message_data["data"]
+                        tool = next(t for t in chatbot.agent.tools.values() if t.name == "submit_service_inquiry")
+                        result = tool._run(
+                            name=inquiry_data.get("Your_name", inquiry_data.get("name", "")),  # Handle both cases
+                            email=inquiry_data["email"],
+                            phone=inquiry_data["phone"],
+                            subject=inquiry_data["Subject"],  # Use capitalized "Subject" as sent by form
+                            message=inquiry_data["Message"]   # Use capitalized "Message" as sent by form
+                        )
+                        continue
+                except json.JSONDecodeError:
+                    logger.error("Invalid JSON received")
+            
             response = await chatbot.process_message(data)
-            
             await asyncio.sleep(0.5)
-            
             logger.info(f"Sending response: {response[:100]}...")
             await websocket.send_text(response)
     except WebSocketDisconnect:
@@ -672,17 +829,16 @@ def create_test_html():
             margin-right: 12px;
             flex-shrink: 0;
         }
-
         .bot-avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background-color: #7558F7;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-shrink: 0;
-        }   
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #7558F7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+        }
         .bot-avatar svg {
             width: 16px;
             height: 16px;
@@ -851,12 +1007,13 @@ def create_test_html():
         </div>
     </div>
 
-    <script>
+   <script>
 const chatBox = document.getElementById('chat-box');
 const messageInput = document.getElementById('message-input');
 const sendButton = document.getElementById('send-button');
 
 const socket = new WebSocket('ws://' + window.location.host + '/ws');
+window.socket = socket; // Make socket globally accessible
 let hasShownSuggestions = false;
 let lastBotMessage = null;
 
@@ -867,10 +1024,14 @@ socket.onopen = function(e) {
 socket.onmessage = function(event) {
     console.log("Received message:", event.data);
     
-    if (event.data !== "Typing...") {
-        if (event.data !== lastBotMessage) {
-            addBotMessage(event.data);
-        }
+    const typingIndicator = document.getElementById('typing-indicator');
+    if (typingIndicator) typingIndicator.remove(); // Clear typing indicator on new message
+    
+    if (event.data !== "Typing..." && event.data !== lastBotMessage) {
+        lastBotMessage = event.data;
+        addBotMessage(event.data);
+        // Ensure input is focused after response
+        messageInput.focus();
     }
 };
 
@@ -936,8 +1097,8 @@ function addBotMessage(message) {
         let messageContent = `
             <div class="avatar bot-avatar">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                        </svg>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
             </div>
             <div class="message-content">
                 <div class="message-bubble">
@@ -949,7 +1110,7 @@ function addBotMessage(message) {
             messageContent += `
                 <div class="suggestion-container" id="suggestion-container">
                     <div class="suggestion-buttons">
-                        <button class="suggestion-button" data-question="I want to learn about LogBinary's services">I want to learn about LogBinary's services</button>
+                        <button class="suggestion-button" data-question="I am interested in your services">I am interested in your services</button>
                         <button class="suggestion-button" data-question="I want to know about Job openings">I want to know about Job openings</button>
                         <button class="suggestion-button" data-question="I need Contact Information">I need Contact Information</button>
                     </div>
@@ -979,6 +1140,30 @@ function addBotMessage(message) {
                 });
             });
             hasShownSuggestions = true;
+        }
+
+        // Handle inquiry form submission
+        const inquiryForm = messageElement.querySelector('#inquiryForm');
+        if (inquiryForm) {
+            inquiryForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                console.log('Form submission triggered');
+                if (!socket || socket.readyState !== WebSocket.OPEN) {
+                    console.error('WebSocket is not open');
+                    return;
+                }
+                const formData = new FormData(this);
+                const data = Object.fromEntries(formData);
+                data.service_id = this.dataset.serviceId;
+                const fullName = `${data.first_name} ${data.last_name}`;
+                await socket.send(JSON.stringify({ action: 'submit_inquiry', data: { ...data, name: fullName } }));
+                // Replace the form with the thank you message
+                const parentMessage = this.closest('.message');
+                if (parentMessage && !parentMessage.querySelector('.message-bubble').innerHTML.includes('Thank you!')) {
+                    parentMessage.querySelector('.message-bubble').innerHTML = 'Thank you! Your record has been submitted. Is there anything else we can help you with?';
+                }
+                return false;
+            });
         }
     }
 }
@@ -1046,6 +1231,14 @@ function addGlobalStyles() {
             font-weight: 600;
             color: #232f3e;
         }
+        
+        .inquiry-form {
+            border: 1px solid #e9ebed;
+            border-radius: 8px;
+            padding: 16px;
+            background-color: #f8f9fa;
+            margin: 12px 0;
+        }
     `;
     document.head.appendChild(styleElement);
 }
@@ -1060,8 +1253,8 @@ function showTypingIndicator() {
     typingElement.innerHTML = `
         <div class="avatar bot-avatar">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
         </div>
         <div class="message-content">
             <div class="message-bubble">Typing...</div>
@@ -1079,6 +1272,7 @@ function showTypingIndicator() {
     with open("index_234.html", "w") as file:
         file.write(html)
 
+import datetime
 create_test_html()
 
 if __name__ == "__main__":

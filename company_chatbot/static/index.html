@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogBinary AI Assistant</title>
+    <link rel="stylesheet" href="static/styles.css">
+</_nullable>
+<body>
+    <div class="chat-widget">
+        <div class="chat-header">
+            <div class="header-left">
+                <span class="header-title">Ask LogBinary</span>
+                <span class="built-in-badge">built-in</span>
+            </div>
+            <div class="header-controls">
+                <button class="control-button">−</button>
+                <button class="control-button">×</button>
+            </div>
+        </div>
+        
+        <div class="status-message">
+            <span class="status-icon"></span>
+            Our sales reps are online
+        </div>
+        
+        <div id="chat-box" class="conversation"></div>
+        
+        <div class="input-container">
+            <div class="input-wrapper">
+                <input type="text" id="message-input" placeholder="Ask a question">
+                <button id="send-button">
+                    <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <div class="footer">
+            By chatting, you agree to this <a href="#">disclaimer</a>.
+        </div>
+    </div>
+    <script src="static/script.js"></script>
+</body>
+</html>
