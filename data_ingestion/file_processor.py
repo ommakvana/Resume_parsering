@@ -229,7 +229,7 @@ def parse_resume(resume_text, file_name=None):
         """
 
     completion = client.make_request(
-        model="qwen-2.5-32b",
+        model="gemma2-9b-it",
         messages=[{"role": "user", "content": prompt}],
         temperature=0,
         max_completion_tokens=6790,

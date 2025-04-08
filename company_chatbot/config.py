@@ -20,6 +20,9 @@ if not GROQ_API_KEY:
     logger.warning("GROQ_API_KEY not found in environment variables, using fallback method")
     GROQ_API_KEY = "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"
 
+MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://logbinary:LogBinary%40123@192.168.1.41:27018/?authSource=admin")
+DB_NAME = os.getenv("MONGODB_DB", "logbinary_chatbot")
+
 def load_company_data():
     """Load company data from CSV files"""
     company_data = {

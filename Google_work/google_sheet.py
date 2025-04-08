@@ -90,7 +90,7 @@ def write_to_google_sheet(parsed_data, spreadsheet_id):
             worksheet.update('A1', [full_headers])
             print(f"DEBUG - Headers set to: {full_headers}")
             worksheet.format('A1:Z1', {"textFormat": {"bold": True}})
-            # row_to_append = 2
+            row_to_insert = 2
         else:
             header_row_idx = 0
             for idx, row in enumerate(all_values):
@@ -110,7 +110,6 @@ def write_to_google_sheet(parsed_data, spreadsheet_id):
                 worksheet.format(f'A{header_row_idx+1}:Z{header_row_idx+1}', {"textFormat": {"bold": True}})
 
             row_to_insert = header_row_idx + 2
-
             worksheet.insert_row([""], row_to_insert)
 
         row_data = []
