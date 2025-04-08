@@ -72,11 +72,8 @@ async def websocket_endpoint(websocket: WebSocket):
                 if data.startswith('{') and data.endswith('}'):
                     try:
                         message_data = json.loads(data)
-                        
-                        # For form submissions, store form data
                         if message_data.get("action") == "submit_inquiry":
                             inquiry_data = message_data["data"]
-                            
                             # Save form submission to MongoDB
                             save_message(
                                 session_id=session_id,
@@ -88,7 +85,6 @@ async def websocket_endpoint(websocket: WebSocket):
                                 }
                             )
                             
-                            # Process the form submission
                             tool = next(t for t in chatbot.agent.tools.values() if t.name == "submit_service_inquiry")
                             result = tool._run(
                                 name=inquiry_data.get("Your_name", inquiry_data.get("name", "")),
@@ -99,21 +95,21 @@ async def websocket_endpoint(websocket: WebSocket):
                             )
                             
                             # Create and save confirmation response
-                            confirmation = f"""
-                            {chatbot.chat_styles}
-                            <div class="inquiry-confirmation">
-                                <p>Thank you for your inquiry! We've received your information and will get back to you soon.</p>
-                            </div>
-                            """
+                            # confirmation = f"""
+                            # {chatbot.chat_styles}
+                            # <div class="inquiry-confirmation">
+                            #     <p>Thank you for your inquiry! We've received your information and will get back to you soon.</p>
+                            # </div>
+                            # """
                             
                             save_message(
                                 session_id=session_id,
                                 message_type="bot",
-                                content=confirmation,
+                                content="Thank you for your inquiry! We've received your information and will get back to you soon.",
                                 metadata={"message_category": "form_confirmation"}
                             )
                             
-                            await websocket.send_text(confirmation)
+                            # await websocket.send_text(confirmation)
                             continue
                             
                         elif message_data.get("action") == "submit_job_application":
@@ -142,22 +138,22 @@ async def websocket_endpoint(websocket: WebSocket):
                                 resume_file=application_data["resume_file"]
                             )
                             
-                            # Create and save confirmation response
-                            confirmation = f"""
-                            {chatbot.chat_styles}
-                            <div class="application-confirmation">
-                                <p>Thank you for your application! We've received your information and will review your qualifications soon.</p>
-                            </div>
-                            """
+                            # # Create and save confirmation response
+                            # confirmation = f"""
+                            # {chatbot.chat_styles}
+                            # <div class="application-confirmation">
+                            #     <p>Thank you for your application! We've received your information and will review your qualifications soon.</p>
+                            # </div>
+                            # """
                             
                             save_message(
                                 session_id=session_id,
                                 message_type="bot",
-                                content=confirmation,
+                                content="Thank you for your application! We've received your information and will review your qualifications soon.",
                                 metadata={"message_category": "form_confirmation"}
                             )
                             
-                            await websocket.send_text(confirmation)
+                            # await websocket.send_text(confirmation)
                             continue
                         
                         # For other JSON messages, try to extract meaningful content

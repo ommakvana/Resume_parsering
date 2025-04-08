@@ -5,17 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LogBinary AI Assistant</title>
     <link rel="stylesheet" href="static/styles.css">
-</_nullable>
+</head>
 <body>
-    <div class="chat-widget">
+    <!-- Chat Widget Container -->
+    <div id="chat-widget" class="chat-widget">
         <div class="chat-header">
             <div class="header-left">
                 <span class="header-title">Ask LogBinary</span>
                 <span class="built-in-badge">built-in</span>
             </div>
             <div class="header-controls">
-                <button class="control-button">−</button>
-                <button class="control-button">×</button>
+                <button id="minimize-button" class="control-button">−</button>
+                <button id="close-button" class="control-button">×</button>
             </div>
         </div>
         
@@ -42,6 +43,14 @@
             By chatting, you agree to this <a href="#">disclaimer</a>.
         </div>
     </div>
+
+    <!-- Chat Toggle Button -->
+    <button id="chat-toggle-button" class="chat-toggle-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+    </button>
+
     <script src="static/script.js"></script>
 </body>
 </html>
