@@ -256,9 +256,9 @@ function addBotMessage(message) {
             messageContent += `
                 <div class="suggestion-container" id="suggestion-container">
                     <div class="suggestion-buttons">
-                        <button class="suggestion-button" data-question="I am interested in your services">I am interested in your services</button>
-                        <button class="suggestion-button" data-question="I want to know about Job openings">I want to know about Job openings</button>
-                        <button class="suggestion-button" data-question="I need Contact Information">I need Contact Information</button>
+                        <button class="suggestion-button" data-question="Tell me about your services">Tell me about your services</button>
+                        <button class="suggestion-button" data-question="What job openings are available?">What job openings are available?</button>
+                        <button class="suggestion-button" data-question="How can I contact you?">How can I contact you?</button>
                     </div>
                 </div>
             `;
@@ -497,16 +497,16 @@ function showClearPopupInsideChat() {
         <span class="chat-popup-close">×</span>
         <p>All messages in the chat will be cleared. Would you like to clear this conversation?</p>
         <div class="chat-popup-buttons">
-            <button class="chat-popup-cancel">Cancel</button>
-            <button class="chat-popup-clear">Clear</button>
+            <button class="chat-popup-No">No</button>
+            <button class="chat-popup-Yes">Yes</button>
         </div>
     `;
     chatBox.appendChild(popup);
 
     // Add event listeners
     const closePopup = popup.querySelector('.chat-popup-close');
-    const cancelButton = popup.querySelector('.chat-popup-cancel');
-    const clearButton = popup.querySelector('.chat-popup-clear');
+    const cancelButton = popup.querySelector('.chat-popup-No');
+    const clearButton = popup.querySelector('.chat-popup-Yes');
 
     closePopup.addEventListener('click', removePopup);
     cancelButton.addEventListener('click', removePopup);
