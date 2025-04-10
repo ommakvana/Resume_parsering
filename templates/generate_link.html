@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Temporary Resume Link</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: #f5f6f5;
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: #fff;
+            padding: 10px 40px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            display: none;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            max-width: 120px;
+            height: auto;
+            object-fit: contain;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 30px;
+        }
+
+        nav a {
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #ff6200;
+        }
+
+        main {
+            flex: 1;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 100px 20px 60px;
+        }
+
+        .container {
+            background: #fff;
+            border-radius: 8px;
+            padding: 40px;
+            max-width: 550px;
+            width: 100%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+        }
+
+        h1 {
+            font-size: 2.2em;
+            margin-bottom: 30px;
+            font-weight: 600;
+            color: #ff6200;
+        }
+
+        button {
+            background: #ff6200;
+            border: none;
+            padding: 14px 40px;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 1.1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #e55a00;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #linkContainer {
+            margin-top: 30px;
+            font-size: 1em;
+            color: #666;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #eee;
+        }
+
+        #linkContainer a {
+            color: #ff6200;
+            text-decoration: none;
+            font-weight: 500;
+            word-break: break-all;
+        }
+
+        #linkContainer a:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            background: #333;
+            color: #fff;
+            padding: 40px 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        footer a {
+            color: #ff6200;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 6px solid #fff;
+            border-top: 6px solid #ff6200;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 20px;
+                padding: 10px;
+            }
+            .logo {
+                max-width: 100px;
+            }
+            nav ul {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            .container {
+                margin: 20px;
+                padding: 30px;
+            }
+            h1 { font-size: 1.8em; }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <img src="https://www.logbinary.com/images/logo.png" alt="LogBinary Logo" class="logo">
+            <nav>
+                <ul>
+                    <li><a href="/career">Generate Link</a></li>
+                    <li><a href="/">Upload Resume</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <h1>Generate Resume Link</h1>
+            <button id="generateButton" onclick="generateLink()">Generate Link</button>
+            <div id="linkContainer"></div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <p>© 2025 LogBinary. All rights reserved.</p>
+            <p><a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
+        </div>
+    </footer>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        (function() {
+            const CORRECT_ACCESS_KEY = '7876';
+            const LOGIN_DURATION = 5000; // 5 seconds for testing
+            function promptForAccessKey() {
+                return prompt('Access Required\nEnter Access Key:');
+            }
+            function showPageContent() {
+                document.querySelector('header').style.display = 'block';
+                document.querySelector('main').style.display = 'flex';
+                document.querySelector('footer').style.display = 'block';
+            }
+            function hasLoginExpired(loginTimestamp) {
+                return (Date.now() - loginTimestamp) > LOGIN_DURATION;
+            }
+            function clearLoginData() {
+                localStorage.removeItem('careerPageAccess');
+                localStorage.removeItem('loginTimestamp');
+            }
+            function checkPageAccess() {
+                const isValidated = localStorage.getItem('careerPageAccess') === 'true';
+                const loginTimestamp = parseInt(localStorage.getItem('loginTimestamp'), 10);
+                if (isValidated && loginTimestamp && !hasLoginExpired(loginTimestamp)) {
+                    showPageContent();
+                    return;
+                }
+                clearLoginData();
+                let attempts = 0;
+                const maxAttempts = 10;
+                while (attempts < maxAttempts) {
+                    const userInput = promptForAccessKey();
+                    if (userInput === null) {
+                        window.location.href = '/';
+                        return;
+                    }
+                    if (userInput.trim() === CORRECT_ACCESS_KEY) {
+                        localStorage.setItem('careerPageAccess', 'true');
+                        localStorage.setItem('loginTimestamp', Date.now().toString());
+                        showPageContent();
+                        break;
+                    } else {
+                        alert('Incorrect access key. Please try again.');
+                        attempts++;
+                    }
+                }
+                if (attempts >= maxAttempts) {
+                    alert('Too many incorrect attempts. Redirecting...');
+                    window.location.href = '/';
+                }
+            }
+            document.addEventListener('DOMContentLoaded', checkPageAccess);
+        })();
+
+        async function generateLink() {
+            const generateButton = document.getElementById('generateButton');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const linkContainer = document.getElementById('linkContainer');
+
+            generateButton.disabled = true;
+            generateButton.textContent = 'Generating...';
+            loadingOverlay.style.display = 'flex';
+
+            try {
+                const response = await fetch('/generate_link', { method: 'POST' });
+                const data = await response.json();
+                linkContainer.innerHTML = `
+                    <p>Share this link:</p>
+                    <p><a href="${data.link}" target="_blank">${data.link}</a></p>
+                    <p>Expires at: ${new Date(data.expires_at).toLocaleString()}</p>
+                `;
+            } catch (error) {
+                console.error('Error generating link:', error);
+                linkContainer.innerHTML = '<p style="color: #e55a00;">Failed to generate link. Please try again.</p>';
+            } finally {
+                generateButton.disabled = false;
+                generateButton.textContent = 'Generate Link';
+                loadingOverlay.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

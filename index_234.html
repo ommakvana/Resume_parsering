@@ -1,0 +1,560 @@
+
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogBinary AI Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        body {
+            background-color: #f8f9fa;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .chat-widget {
+            width: 400px;
+            height: 650px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #d9d9d9;
+        }
+        .chat-header {
+            background-color: #ffffff;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #d9d9d9;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        .built-in-badge {
+            background-color: #f2f3f3;
+            border: 1px solid #d9d9d9;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 12px;
+            margin-left: 8px;
+            color: #232f3e;
+        }
+        .header-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #232f3e;
+            display: flex;
+            align-items: center;
+        }
+        .header-controls {
+            display: flex;
+            gap: 8px;
+        }
+        .control-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: #545b64;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+        }
+        .status-message {
+            padding: 8px 16px;
+            background-color: #f8f8f8;
+            border-bottom: 1px solid #d9d9d9;
+            font-size: 12px;
+            color: #545b64;
+            display: flex;
+            align-items: center;
+        }
+        .status-icon {
+            width: 8px;
+            height: 8px;
+            background-color: #2cbb5d;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .conversation {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background-color: #ffffff;
+        }
+        .message {
+            display: flex;
+            max-width: 100%;
+        }
+        .user-message {
+            justify-content: flex-end;
+        }
+        .bot-message {
+            justify-content: flex-start;
+        }
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .bot-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #7558F7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .bot-avatar svg {
+            width: 16px;
+            height: 16px;
+            color: white;
+        }
+        .user-avatar {
+            background-color: #e9ebed;
+        }
+        .message-content {
+            max-width: calc(100% - 44px);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .message-bubble {
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #232f3e;
+            width: auto;
+            display: inline-block;
+        }
+        .user-message .message-bubble {
+            background-color: #f2f3f3;
+        }
+        .bot-message .message-bubble {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ebed;
+        }
+        .suggestion-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .suggestion-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+            align-items: flex-start;
+        }
+        .suggestion-button {
+            background-color: #e6e6fa;
+            border: none;
+            color: #161d26;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 14px;
+            line-height: 1.5;
+            text-align: left;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            width: auto;
+            display: inline-block;
+        }
+        .suggestion-button:hover {
+            background-color: #dadaf8;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+        .input-container {
+            padding: 6px;
+            background-color: white;
+            border-top: 1px solid #d9d9d9;
+        }
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            background-color: white;
+            border: 1px solid #d9d9d9;
+            border-radius: 9px;
+            padding: 4px 12px;
+            transition: all 0.2s ease;
+        }
+        .input-wrapper:focus-within {
+            box-shadow: 0 0 0 2px rgba(9, 114, 211, 0.3);
+            border-color: #0972d3;
+        }
+        #message-input {
+            flex-grow: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            padding: 4px 10px;
+            font-size: 15px;
+            color: #232f3e;
+        }
+        #message-input::placeholder {
+            color: #687078;
+        }
+        #send-button {
+            width: 32px;
+            height: 32px;
+            background-color: #7558F7;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        #send-button:disabled {
+            background-color: #e9ebed;
+            cursor: not-allowed;
+        }
+        .footer {
+            padding: 12px 16px;
+            text-align: center;
+            font-size: 12px;
+            color: #687078;
+        }
+        .footer a {
+            color: #0972d3;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        .arrow-icon {
+            color: white;
+        }
+        @media (max-width: 480px) {
+            .chat-widget {
+                width: 95%;
+                height: 90vh;
+                border-radius: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-widget">
+        <div class="chat-header">
+            <div class="header-left">
+                <span class="header-title">Ask LogBinary</span>
+                <span class="built-in-badge">built-in</span>
+            </div>
+            <div class="header-controls">
+                <button class="control-button">−</button>
+                <button class="control-button">×</button>
+            </div>
+        </div>
+        
+        <div class="status-message">
+            <span class="status-icon"></span>
+            Our sales reps are online
+        </div>
+        
+        <div id="chat-box" class="conversation"></div>
+        
+        <div class="input-container">
+            <div class="input-wrapper">
+                <input type="text" id="message-input" placeholder="Ask a question">
+                <button id="send-button">
+                    <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <div class="footer">
+            By chatting, you agree to this <a href="#">disclaimer</a>.
+        </div>
+    </div>
+
+   <script>
+const chatBox = document.getElementById('chat-box');
+const messageInput = document.getElementById('message-input');
+const sendButton = document.getElementById('send-button');
+
+const socket = new WebSocket('ws://' + window.location.host + '/ws');
+window.socket = socket; // Make socket globally accessible
+let hasShownSuggestions = false;
+let lastBotMessage = null;
+
+socket.onopen = function(e) {
+    console.log('WebSocket connection established');
+};
+
+socket.onmessage = function(event) {
+    console.log("Received message:", event.data);
+    
+    const typingIndicator = document.getElementById('typing-indicator');
+    if (typingIndicator) typingIndicator.remove(); // Clear typing indicator on new message
+    
+    if (event.data !== "Typing..." && event.data !== lastBotMessage) {
+        lastBotMessage = event.data;
+        addBotMessage(event.data);
+        // Ensure input is focused after response
+        messageInput.focus();
+    }
+};
+
+socket.onclose = function(event) {
+    if (event.wasClean) {
+        console.log(`Connection closed cleanly, code=${event.code} reason=${event.reason}`);
+    } else {
+        console.error('Connection died');
+    }
+};
+
+socket.onerror = function(error) {
+    console.error(`WebSocket error: ${error.message}`);
+};
+
+sendButton.addEventListener('click', sendMessage);
+
+messageInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        sendMessage();
+    }
+});
+
+function sendMessage() {
+    const message = messageInput.value.trim();
+    if (message) {
+        addUserMessage(message);
+        socket.send(message);
+        messageInput.value = '';
+        showTypingIndicator();
+        
+        const suggestionContainer = document.getElementById('suggestion-container');
+        if (suggestionContainer) {
+            suggestionContainer.remove();
+        }
+    }
+}
+
+function addUserMessage(message) {
+    const messageElement = document.createElement('div');
+    messageElement.classList.add('message', 'user-message');
+    
+    messageElement.innerHTML = `
+        <div class="message-content">
+            <div class="message-bubble">${message}</div>
+        </div>
+    `;
+    
+    chatBox.appendChild(messageElement);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function addBotMessage(message) {
+    const typingIndicator = document.getElementById('typing-indicator');
+    if (typingIndicator) typingIndicator.remove();
+    
+    if (message !== "Typing...") {
+        lastBotMessage = message;
+
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', 'bot-message');
+        
+        let messageContent = `
+            <div class="avatar bot-avatar">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+            </div>
+            <div class="message-content">
+                <div class="message-bubble">
+                    ${message}
+                </div>
+        `;
+        
+        if (!hasShownSuggestions) {
+            messageContent += `
+                <div class="suggestion-container" id="suggestion-container">
+                    <div class="suggestion-buttons">
+                        <button class="suggestion-button" data-question="I am interested in your services">I am interested in your services</button>
+                        <button class="suggestion-button" data-question="I want to know about Job openings">I want to know about Job openings</button>
+                        <button class="suggestion-button" data-question="I need Contact Information">I need Contact Information</button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        messageContent += `</div>`;
+        messageElement.innerHTML = messageContent;
+        
+        chatBox.appendChild(messageElement);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        
+        if (!hasShownSuggestions) {
+            const suggestionButtons = messageElement.querySelectorAll('.suggestion-button');
+            suggestionButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const question = this.getAttribute('data-question');
+                    addUserMessage(question);
+                    socket.send(question);
+                    showTypingIndicator();
+                    
+                    const suggestionContainer = document.getElementById('suggestion-container');
+                    if (suggestionContainer) {
+                        suggestionContainer.remove();
+                    }
+                });
+            });
+            hasShownSuggestions = true;
+        }
+
+        // Handle inquiry form submission
+        const inquiryForm = messageElement.querySelector('#inquiryForm');
+        if (inquiryForm) {
+            inquiryForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                console.log('Form submission triggered');
+                if (!socket || socket.readyState !== WebSocket.OPEN) {
+                    console.error('WebSocket is not open');
+                    return;
+                }
+                const formData = new FormData(this);
+                const data = Object.fromEntries(formData);
+                data.service_id = this.dataset.serviceId;
+                const fullName = `${data.first_name} ${data.last_name}`;
+                await socket.send(JSON.stringify({ action: 'submit_inquiry', data: { ...data, name: fullName } }));
+                // Replace the form with the thank you message
+                const parentMessage = this.closest('.message');
+                if (parentMessage && !parentMessage.querySelector('.message-bubble').innerHTML.includes('Thank you!')) {
+                    parentMessage.querySelector('.message-bubble').innerHTML = 'Thank you! Your record has been submitted. Is there anything else we can help you with?';
+                }
+                return false;
+            });
+        }
+    }
+}
+
+function addGlobalStyles() {
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+        .message-bubble {
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #232f3e;
+            width: auto;
+            display: inline-block;
+            max-width: 100%;
+        }
+        
+        .bot-message .message-bubble {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ebed;
+        }
+        
+        .welcome-message {
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        
+        .message-bubble ul, 
+        .message-bubble ol {
+            padding-left: 20px;
+            margin: 8px 0;
+        }
+        
+        .message-bubble li {
+            margin-bottom: 6px;
+        }
+        
+        .service-card {
+            border: 1px solid #e9ebed;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            background-color: #f8f9fa;
+        }
+        
+        .service-title {
+            font-weight: 600;
+            color: #0972d3;
+            margin-bottom: 6px;
+        }
+        
+        .service-description {
+            font-size: 13px;
+            color: #232f3e;
+        }
+        
+        .job-listing {
+            border-left: 3px solid #0972d3;
+            padding-left: 12px;
+            margin: 12px 0;
+        }
+        
+        .job-title {
+            font-weight: 600;
+            color: #232f3e;
+        }
+        
+        .inquiry-form {
+            border: 1px solid #e9ebed;
+            border-radius: 8px;
+            padding: 16px;
+            background-color: #f8f9fa;
+            margin: 12px 0;
+        }
+    `;
+    document.head.appendChild(styleElement);
+}
+
+window.addEventListener('DOMContentLoaded', addGlobalStyles);
+
+function showTypingIndicator() {
+    const typingElement = document.createElement('div');
+    typingElement.classList.add('message', 'bot-message');
+    typingElement.id = 'typing-indicator';
+    
+    typingElement.innerHTML = `
+        <div class="avatar bot-avatar">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+        </div>
+        <div class="message-content">
+            <div class="message-bubble">Typing...</div>
+        </div>
+    `;
+    
+    chatBox.appendChild(typingElement);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+</script>
+</body>
+</html>
+    

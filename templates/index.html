@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Processor & Link Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f4f6f9;
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding-top: 100px;
+            padding-bottom: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: #fff;
+            padding: 15px 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            max-height: 50px;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 30px;
+        }
+
+        nav a {
+            color: #667085;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        nav a:hover, nav a.active {
+            color: #ff6b00;
+        }
+
+        nav a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #ff6b00;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px;
+            padding-bottom: 150px; /* Adjust based on footer height */
+            flex: 1;
+        }
+
+        h1 {
+            font-size: 1.8em;
+            margin-bottom: 25px;
+            font-weight: 600;
+            color: #ff6b00;
+            text-align: center;
+        }
+
+        .section {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .link-section {
+            text-align: center;
+        }
+
+        .upload-section {
+            text-align: left;
+        }
+
+        .custom-file-upload {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        #fileNames {
+            color: #666;
+            margin: 10px 0;
+            display: block;
+        }
+
+        #fileNames ul {
+            list-style-type: disc;
+            padding-left: 20px;
+            margin: 0;
+        }
+
+        #fileNames li {
+            margin-bottom: 5px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            min-width: 120px;
+            text-align: center;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #ff6b00;
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #ff5500;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .preview-section {
+            margin-top: 40px;
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        #saveButton {
+            margin-top: 20px;
+            display: block;
+            width: 200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            min-width: 1200px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+
+        th:nth-child(1), td:nth-child(1) { width: 100px; }
+        th:nth-child(2), td:nth-child(2) { width: 150px; }
+        th:nth-child(3), td:nth-child(3) { width: 200px; }
+        th:nth-child(4), td:nth-child(4) { width: 120px; }
+        th:nth-child(5), td:nth-child(5) { width: 120px; }
+        th:nth-child(6), td:nth-child(6) { width: 100px; }
+        th:nth-child(7), td:nth-child(7) { width: 100px; }
+        th:nth-child(8), td:nth-child(8) { width: 150px; }
+        th:nth-child(9), td:nth-child(9) {
+            width: 300px;
+            white-space: normal;
+            max-height: 100px;
+            overflow-y: auto;
+            line-height: 1.4;
+            display: block;
+        }
+        th:nth-child(10), td:nth-child(10) { width: 100px; }
+        th:nth-child(11), td:nth-child(11) { width: 100px; }
+        th:nth-child(12), td:nth-child(12) { width: 150px; }
+        th:nth-child(13), td:nth-child(13) { width: 80px; }
+        th:nth-child(14), td:nth-child(14) { width: 200px; }
+
+        #linkContainer {
+            margin-top: 20px;
+            background: #f4f6f9;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        #linkContainer a {
+            color: #ff6b00;
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #fff;
+            border-top: 5px solid #ff6b00;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 80px;
+            }
+            .header-container {
+                flex-direction: column;
+                gap: 15px;
+                padding: 10px;
+            }
+            .logo {
+                max-height: 40px;
+            }
+            nav ul {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            .container {
+                margin: 0 20px;
+                padding: 20px;
+            }
+            h1 { 
+                font-size: 1.5em; 
+            }
+            button {
+                width: 100%;
+            }
+        }
+
+        .footer {
+            background-color: #2d2d2d;
+            color: #ffffff;
+            padding: 15px 0;
+            text-align: center;
+            font-family: 'Inter', sans-serif;
+            position: fixed; /* Use fixed to keep it at the bottom of the viewport */
+            bottom: 0;
+            width: 100%;
+            left: 0;
+            z-index: 1000; /* Ensure it stays above other content */
+        }
+
+        .footer-container {
+            display: flex;
+            justify-content: space-around;
+            max-width: 1200px;
+            margin: 0 auto;
+            align-items: center;
+        }
+
+        .footer-section {
+            flex: 1;
+            padding: 0 15px;
+            border-right: 1px solid #444;
+        }
+
+        .footer-section:last-child {
+            border-right: none;
+        }
+
+        .footer-section h4 {
+            margin: 10px 0;
+        }
+
+        .footer-section p {
+            font-size: 12px;
+            color: #dcdcdc;
+            margin: 5px 0;
+        }
+
+        .footer-bottom {
+            display: block;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #bbb;
+        }
+
+        @media (max-width: 768px) {
+            .footer-container {
+                flex-direction: column;
+            }
+            .footer-section {
+                border-right: none;
+                border-bottom: 1px solid #444;
+                padding: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <img src="https://www.logbinary.com/images/logo.png" alt="LogBinary Logo" class="logo">
+            <nav>
+                <ul>
+                    <li><a id="linkTab" class="active">Generate Link</a></li>
+                    <li><a id="uploadTab">Upload Resume</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 id="pageTitle">Generate Link for Resume</h1>
+
+        <div id="linkSection" class="section link-section active">
+            <button id="generateButton" onclick="generateLink()">Generate Link</button>
+            <div id="linkContainer"></div>
+        </div>
+
+        <div id="uploadSection" class="section upload-section">
+            <form id="uploadForm" enctype="multipart/form-data">
+                <label for="resumeInput" class="custom-file-upload">
+                    Choose Files
+                </label>
+                <input type="file" name="resumes" id="resumeInput" multiple accept=".pdf,.docx,.doc,.rtf,.txt,.png,.jpg">
+                <span id="fileNames">No file chosen</span>
+                <button type="submit">Upload</button>
+            </form>
+            <p style="text-align: center; color: #667085; margin-top: 10px;">Max 10 resumes at a time</p>
+
+            <div class="preview-section" id="previewSection">
+                <h2 style="text-align: center; color: #ff6b00; margin-bottom: 15px;">Preview</h2>
+                <div class="table-wrapper">
+                    <table id="resumeTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Name</th>
+                                <th>Email Id</th>
+                                <th>Contact No</th>
+                                <th>Current Location</th>
+                                <th>Category</th>
+                                <th>Total Experience</th>
+                                <th>Designation</th>
+                                <th>Skills</th>
+                                <th>CTC info</th>
+                                <th>No of companies</th>
+                                <th>Last company</th>
+                                <th>Loyalty %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resumeTableBody"></tbody>
+                    </table>
+                </div>
+                <button id="saveButton">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <i class="fas fa-map-marker-alt"></i>
+                <h4>Headquarter 🇮🇳</h4>
+                <p>A-204, Empire Business Hub, Science City Road, Sola, Ahmedabad - 380060, India</p>
+                <p><i class="fas fa-phone"></i> +91-931 678 9418</p>
+            </div>
+            <div class="footer-section">
+                <i class="fas fa-map-marker-alt"></i>
+                <h4>Office 🇺🇸</h4>
+                <p>319 Washington St #2, Boston, MA 02135, United States</p>
+                <p><i class="fas fa-phone"></i> +1-617 359 3207, +1-617 837 6892</p>
+            </div>
+            <div class="footer-section">
+                <i class="fas fa-map-marker-alt"></i>
+                <h4>Office 🇨🇦</h4>
+                <p>152-3030 Breakwater Ct, Mississauga, ON L5B 4N5, Canada</p>
+                <p><i class="fas fa-phone"></i> +1-647 478 1360</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>Copyright © All Rights Reserved</p>
+            <div class="social-icons">
+                <a href="#"><i class="fab fa-facebook"></i></a>
+                <a href="#"><i class="fab fa-linkedin"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        (function() {
+            const CORRECT_ACCESS_KEY = '7876';
+            const LOGIN_DURATION = 5000;
+            const pageTitle = document.getElementById('pageTitle');
+            const linkSection = document.getElementById('linkSection');
+            const uploadSection = document.getElementById('uploadSection');
+    
+            function promptForAccessKey() {
+                return prompt('Access Required\nEnter Access Key:');
+            }
+    
+            function hasLoginExpired(loginTimestamp) {
+                return (Date.now() - loginTimestamp) > LOGIN_DURATION;
+            }
+    
+            function clearLoginData() {
+                localStorage.removeItem('pageAccess');
+                localStorage.removeItem('loginTimestamp');
+            }
+    
+            function showPageContent() {
+                document.body.style.display = 'block';
+            }
+    
+            function checkPageAccess() {
+                const isValidated = localStorage.getItem('pageAccess') === 'true';
+                const loginTimestamp = parseInt(localStorage.getItem('loginTimestamp'), 10);
+    
+                if (isValidated && loginTimestamp && !hasLoginExpired(loginTimestamp)) {
+                    showPageContent();
+                    return;
+                }
+    
+                clearLoginData();
+    
+                let attempts = 0;
+                const maxAttempts = 10;
+    
+                while (attempts < maxAttempts) {
+                    const userInput = promptForAccessKey();
+                    if (userInput === null) {
+                        window.location.href = '/';
+                        return;
+                    }
+                    if (userInput.trim() === CORRECT_ACCESS_KEY) {
+                        localStorage.setItem('pageAccess', 'true');
+                        localStorage.setItem('loginTimestamp', Date.now().toString());
+                        showPageContent();
+                        break;
+                    } else {
+                        alert('Incorrect access key. Please try again.');
+                        attempts++;
+                    }
+                }
+    
+                if (attempts >= maxAttempts) {
+                    alert('Too many incorrect attempts. Redirecting...');
+                    window.location.href = '/';
+                }
+            }
+    
+            document.body.style.display = 'none';
+            document.addEventListener('DOMContentLoaded', checkPageAccess);
+    
+            document.getElementById('linkTab').addEventListener('click', function() {
+                linkSection.classList.add('active');
+                uploadSection.classList.remove('active');
+                this.classList.add('active');
+                document.getElementById('uploadTab').classList.remove('active');
+                document.getElementById('previewSection').style.display = 'none';
+                pageTitle.textContent = 'Generate Link';
+            });
+    
+            document.getElementById('uploadTab').addEventListener('click', function() {
+                uploadSection.classList.add('active');
+                linkSection.classList.remove('active');
+                this.classList.add('active');
+                document.getElementById('linkTab').classList.remove('active');
+                pageTitle.textContent = 'Upload Resume';
+            });
+        })();
+
+        async function generateLink() {
+            const generateButton = document.getElementById('generateButton');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const linkContainer = document.getElementById('linkContainer');
+    
+            generateButton.disabled = true;
+            generateButton.textContent = 'Generating...';
+            loadingOverlay.style.display = 'flex';
+    
+            try {
+                const response = await fetch('/generate_link', { method: 'POST' });
+                const data = await response.json();
+                linkContainer.innerHTML = `
+                    <p>Share this link:</p>
+                    <p><a href="${data.link}" target="_blank">${data.link}</a></p>
+                    <p>Expires at: ${new Date(data.expires_at).toLocaleString()}</p>
+                `;
+            } catch (error) {
+                console.error('Error generating link:', error);
+                linkContainer.innerHTML = '<p style="color: #e55a00;">Failed to generate link. Please try again.</p>';
+            } finally {
+                generateButton.disabled = false;
+                generateButton.textContent = 'Generate Link';
+                loadingOverlay.style.display = 'none';
+            }
+        }
+    
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const files = document.getElementById('resumeInput').files;
+    
+            if (files.length > 10) {
+                alert('Maximum 10 resumes allowed!');
+                return;
+            }
+    
+            if (files.length === 0) {
+                alert('Please select at least one file!');
+                return;
+            }
+    
+            const uploadButton = e.target.querySelector('button');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            
+            uploadButton.disabled = true;
+            uploadButton.textContent = 'Uploading...';
+            loadingOverlay.style.display = 'flex';
+    
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+    
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+    
+                window.fileReferences = data.file_references || {};
+                displayPreview(data.resumes);
+            } catch (error) {
+                console.error('Error uploading files:', error);
+                alert('An error occurred while uploading files.');
+            } finally {
+                uploadButton.disabled = false;
+                uploadButton.textContent = 'Upload';
+                loadingOverlay.style.display = 'none';
+            }
+        });
+    
+        document.getElementById('resumeInput').addEventListener('change', (e) => {
+            const files = e.target.files;
+            const fileNamesSpan = document.getElementById('fileNames');
+            
+            if (files.length === 0) {
+                fileNamesSpan.textContent = 'No file chosen';
+                return;
+            }
+    
+            const fileArray = Array.from(files);
+            fileArray.sort((a, b) => {
+                const nameA = a.name;
+                const nameB = b.name;
+                const numA = nameA.match(/\d+(\.\d+)?/);
+                const numB = nameB.match(/\d+(\.\d+)?/);
+                if (numA && numB) {
+                    return parseFloat(numA[0]) - parseFloat(numB[0]);
+                } else if (numA || numB) {
+                    return numA ? -1 : 1;
+                } else {
+                    return nameA.localeCompare(nameB);
+                }
+            });
+    
+            const ul = document.createElement('ul');
+            fileArray.forEach(file => {
+                const li = document.createElement('li');
+                li.textContent = file.name;
+                ul.appendChild(li);
+            });
+    
+            fileNamesSpan.innerHTML = '';
+            fileNamesSpan.appendChild(ul);
+        });
+    
+        function displayPreview(resumes) {
+            const tableBody = document.getElementById('resumeTableBody');
+            tableBody.innerHTML = '';
+            
+            resumes.forEach(resume => {
+                const row = document.createElement('tr');
+                const fields = [
+                    'Date', 'Name', 'Email Id', 'Contact No', 'Current Location', 'Category',
+                    'Total Experience', 'Designation', 'Skills', 'CTC info',
+                    'No of companies', 'Last company', 'Loyalty %'
+                ];
+    
+                if (resume.error) {
+                    const cell = document.createElement('td');
+                    cell.colSpan = fields.length;
+                    cell.textContent = `Error: ${resume.error} (${resume.original_filename})`;
+                    cell.style.color = 'red';
+                    row.appendChild(cell);
+                } else {
+                    fields.forEach(field => {
+                        const cell = document.createElement('td');
+                        cell.textContent = resume[field] || '';
+                        row.appendChild(cell);
+                    });
+                }
+    
+                tableBody.appendChild(row);
+            });
+    
+            document.getElementById('previewSection').style.display = 'block';
+            window.resumesToSave = resumes;
+        }
+    
+        document.getElementById('saveButton').addEventListener('click', async () => {
+            if (!window.resumesToSave || window.resumesToSave.length === 0) {
+                alert('No resumes to save!');
+                return;
+            }
+    
+            const saveButton = document.getElementById('saveButton');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            
+            saveButton.disabled = true;
+            saveButton.textContent = 'Saving...';
+            loadingOverlay.style.display = 'flex';
+    
+            try {
+                const response = await fetch('/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        resumes: window.resumesToSave,
+                        file_references: window.fileReferences
+                    })
+                });
+                const result = await response.json();
+    
+                alert(result.message);
+                document.getElementById('previewSection').style.display = 'none';
+                window.resumesToSave = [];
+                window.fileReferences = {};
+                document.getElementById('resumeInput').value = '';
+                document.getElementById('fileNames').textContent = 'No file chosen';
+            } catch (error) {
+                console.error('Error saving to sheet:', error);
+                alert('An error occurred while saving to the sheet.');
+            } finally {
+                saveButton.disabled = false;
+                saveButton.textContent = 'Save';
+                loadingOverlay.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
